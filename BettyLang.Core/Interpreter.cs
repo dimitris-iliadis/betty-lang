@@ -16,8 +16,8 @@ namespace BettyLang.Core
             if (node.Operator.Type == TokenType.Plus &&
                 (leftResult.Value is string || rightResult.Value is string))
             {
-                string leftString = leftResult.Value.ToString()!;
-                string rightString = rightResult.Value.ToString()!;
+                string leftString = leftResult.AsString();
+                string rightString = rightResult.AsString();
                 return new InterpreterResult(leftString + rightString);
             }
 

@@ -10,13 +10,12 @@
         {
             _input = input;
             _position = 0;
-            _currentChar = _input.Length > 0 ? _input[_position] : '\0';
+            _currentChar = _input.Length > 0 ? _input[_position] : '\0'; // Handle empty input
         }
 
         private void Advance()
         {
             _position++;
-
             if (_position > _input.Length - 1)
                 _currentChar = '\0';
             else
@@ -48,7 +47,6 @@
                         case '"': stringBuilder.Append('\"'); break; // Double quote
                         case '\'': stringBuilder.Append('\''); break; // Single quote
                         case '\\': stringBuilder.Append('\\'); break; // Backslash
-                                                                      // Add other escape sequences as needed
                         default:
                             throw new Exception($"Unrecognized escape sequence: \\{_currentChar}");
                     }
@@ -75,13 +73,16 @@
             bool dotEncountered = hasLeadingDot;
 
             if (hasLeadingDot)
+            {
                 stringBuilder.Append("0.");
+                Advance(); // Move past the dot character
+            }
 
             while (Char.IsDigit(_currentChar) || _currentChar == '.')
             {
                 if (_currentChar == '.')
                 {
-                    if (dotEncountered)
+                    if (dotEncountered) // Throw when encountering multiple dots
                         throw new FormatException("Invalid numeric format with multiple dots.");
 
                     dotEncountered = true;
@@ -94,6 +95,27 @@
             return stringBuilder.ToString();
         }
 
+        private Token GetSingleCharToken()
+        {
+            (TokenType type, string value) = _currentChar switch
+            {
+                '+' => (TokenType.Plus, "+"),
+                '-' => (TokenType.Minus, "-"),
+                '*' => (TokenType.Mul, "*"),
+                '/' => (TokenType.Div, "/"),
+                '^' => (TokenType.Caret, "^"),
+                '(' => (TokenType.LParen, "("),
+                ')' => (TokenType.RParen, ")"),
+                '\'' or '"' => (TokenType.StringLiteral, ScanStringLiteral()),
+                _ => throw new Exception($"Invalid character '{_currentChar}'")
+            };
+
+            Advance();
+            return new Token(type, value);
+        }
+
+        private char PeekChar() => (_position + 1 >= _input.Length) ? '\0' : _input[_position + 1];
+
         public Token GetNextToken()
         {
             while (_currentChar != '\0')
@@ -105,45 +127,12 @@
                 }
 
                 if (Char.IsDigit(_currentChar))
-                    return new Token(TokenType.NumberLiteral, ScanNumberLiteral(false));
+                    return new Token(TokenType.NumberLiteral, ScanNumberLiteral(hasLeadingDot: false));
 
-                if (_currentChar == '.')
-                {
-                    Advance();
+                if (_currentChar == '.' && Char.IsDigit(PeekChar()))
+                    return new Token(TokenType.NumberLiteral, ScanNumberLiteral(hasLeadingDot: true));
 
-                    if (Char.IsDigit(_currentChar))
-                        return new Token(TokenType.NumberLiteral, ScanNumberLiteral(true));
-                }
-
-                switch (_currentChar)
-                {
-                    case '+':
-                        Advance();
-                        return new Token(TokenType.Plus, "+");
-                    case '-':
-                        Advance();
-                        return new Token(TokenType.Minus, "-");
-                    case '*':
-                        Advance();
-                        return new Token(TokenType.Mul, "*");
-                    case '/':
-                        Advance();
-                        return new Token(TokenType.Div, "/");
-                    case '^':
-                        Advance();
-                        return new Token(TokenType.Caret, "^");
-                    case '(':
-                        Advance();
-                        return new Token(TokenType.LParen, "(");
-                    case ')':
-                        Advance();
-                        return new Token(TokenType.RParen, ")");
-                    case '\'':
-                    case '"':
-                        return new Token(TokenType.StringLiteral, ScanStringLiteral());
-                    default:
-                        throw new Exception($"Invalid character '{_currentChar}'");
-                }
+                return GetSingleCharToken();
             }
 
             return new Token(TokenType.EOF, "");
