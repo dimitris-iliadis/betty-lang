@@ -10,5 +10,6 @@
         public abstract T Visit(AssignmentNode node);
         public abstract T Visit(VariableNode node);
         public abstract T Visit(EmptyStatementNode node);
+        public abstract T Visit(ModuleNode node);
     }
 }

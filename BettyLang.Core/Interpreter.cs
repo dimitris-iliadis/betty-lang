@@ -49,6 +49,13 @@ namespace BettyLang.Core
 
         public override InterpreterResult Visit(StringNode node) => new InterpreterResult(node.Value);
 
+        public override InterpreterResult Visit(ModuleNode node)
+        {
+            node.Block.Accept(this);
+
+            return new InterpreterResult(null);
+        }
+
         public override InterpreterResult Visit(CompoundStatementNode node)
         {
             foreach (var child in node.Children)

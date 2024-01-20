@@ -123,10 +123,13 @@ namespace BettyLang.Core
             return node;
         }
 
-        private Node ParseProgram()
+        private Node ParseModule()
         {
-            var node = ParseCompoundStatement();
-            return node;
+            Eat(TokenType.Module);
+            var variableNode = (VariableNode)ParseVariable();
+            string moduleName = variableNode.Value;
+            var blockNode = ParseCompoundStatement();
+            return new ModuleNode(moduleName, blockNode);
         }
 
         private Node ParseCompoundStatement()
@@ -187,7 +190,7 @@ namespace BettyLang.Core
 
         public Node Parse()
         {
-            var node = ParseProgram();
+            var node = ParseModule();
 
             if (_currentToken.Type != TokenType.EOF)
                 throw new Exception($"Unexpected token: {_currentToken.Type}");

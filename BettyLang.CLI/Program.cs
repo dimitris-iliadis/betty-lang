@@ -6,22 +6,18 @@ namespace BettyLang.CLI
     {
         static void Main(string[] args)
         {
-            while (true)
+            try
             {
-                try
-                {
-                    Console.Write("betty> ");
-                    string? input = Console.ReadLine();
-                    if (input is null) continue;
-                    var lexer = new Lexer(input);
-                    var parser = new Parser(lexer);
-                    var interpreter = new Interpreter(parser);
-                    interpreter.Interpret();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error: {ex.Message}");
-                }
+                Console.Write("betty> ");
+                string? input = Console.ReadLine();
+                var lexer = new Lexer(input);
+                var parser = new Parser(lexer);
+                var interpreter = new Interpreter(parser);
+                interpreter.Interpret();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
             }
         }
     }
