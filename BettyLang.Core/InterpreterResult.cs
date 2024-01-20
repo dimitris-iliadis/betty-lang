@@ -6,7 +6,7 @@
 
         public InterpreterResult(object value) { Value = value; }
 
-        public string AsString() => Value.ToString()!;
-        public double AsNumber() => Convert.ToDouble(Value);
+        public string AsString() => Value?.ToString() ?? string.Empty;
+        public double AsNumber() => Value != null ? Convert.ToDouble(Value) : 0.0;
     }
 }

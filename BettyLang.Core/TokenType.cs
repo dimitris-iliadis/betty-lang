@@ -2,11 +2,15 @@
 {
     public enum TokenType
     {
-        NumberLiteral, StringLiteral,
+        NumberLiteral, StringLiteral, Identifier,
 
         Plus, Minus, Mul, Div, Caret,
 
-        LParen, RParen,
+        LParen, RParen, LBracket, RBracket, Semicolon,
+
+        Module,
+
+        Equals, EqualsEquals,
 
         EOF
     }

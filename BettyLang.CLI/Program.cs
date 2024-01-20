@@ -8,14 +8,20 @@ namespace BettyLang.CLI
         {
             while (true)
             {
-                Console.Write("betty> ");
-                string? input = Console.ReadLine();
-                if (input is null) continue;
-                var lexer = new Lexer(input);
-                var parser = new Parser(lexer);
-                var interpreter = new Interpreter(parser);
-                InterpreterResult result = interpreter.Interpret();
-                Console.WriteLine(result.AsString());
+                try
+                {
+                    Console.Write("betty> ");
+                    string? input = Console.ReadLine();
+                    if (input is null) continue;
+                    var lexer = new Lexer(input);
+                    var parser = new Parser(lexer);
+                    var interpreter = new Interpreter(parser);
+                    interpreter.Interpret();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error: {ex.Message}");
+                }
             }
         }
     }

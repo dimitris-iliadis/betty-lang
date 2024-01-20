@@ -18,7 +18,7 @@ namespace BettyLang.Core
             if (_currentToken.Type == tokenType)
                 _currentToken = _lexer.GetNextToken();
             else
-                throw new Exception($"Unexpected token type {_currentToken.Type}, expected {tokenType}");
+                throw new Exception($"Unexpected token: Expected {tokenType}, found {_currentToken.Type}");
         }
 
         private Node ParseString()
@@ -26,6 +26,13 @@ namespace BettyLang.Core
             var token = _currentToken;
             Eat(TokenType.StringLiteral);
             return new StringNode(token.Value.ToString()!);
+        }
+
+        private Node ParseVariable()
+        {
+            var node = new VariableNode(_currentToken);
+            Eat(TokenType.Identifier);
+            return node;
         }
 
         private Node ParseFactor()
@@ -56,8 +63,11 @@ namespace BettyLang.Core
                 Eat(TokenType.RParen);
                 return node;
             }
-
-            throw new Exception($"Unexpected token type {_currentToken.Type}");
+            else
+            {
+                var node = ParseVariable();
+                return node;
+            }
         }
 
         private Node ParseTerm()
@@ -113,6 +123,76 @@ namespace BettyLang.Core
             return node;
         }
 
-        public Node Parse() => ParseExpression();
+        private Node ParseProgram()
+        {
+            var node = ParseCompoundStatement();
+            return node;
+        }
+
+        private Node ParseCompoundStatement()
+        {
+            Eat(TokenType.LBracket);
+            var nodes = ParseStatementList();
+            Eat(TokenType.RBracket);
+
+            var root = new CompoundStatementNode();
+            foreach (var node in nodes)
+                root.Children.Add(node);
+
+            return root;
+        }
+
+        private List<Node> ParseStatementList()
+        {
+            var node = ParseStatement();
+
+            var results = new List<Node>() { node };
+
+            while (_currentToken.Type == TokenType.Semicolon)
+            {
+                Eat(TokenType.Semicolon);
+                results.Add(ParseStatement());
+            }
+
+            if (_currentToken.Type == TokenType.Identifier)
+                throw new Exception($"Unexpected token: {_currentToken.Type}");
+
+            return results;
+        }
+
+        private Node ParseStatement()
+        {
+            Node node;
+            if (_currentToken.Type == TokenType.LBracket)
+                node = ParseCompoundStatement();
+            else if (_currentToken.Type == TokenType.Identifier)
+                node = ParseAssignmentStatement();
+            else
+                node = ParseEmptyStatement();
+
+            return node;
+        }
+
+        private Node ParseAssignmentStatement()
+        {
+            var left = ParseVariable();
+            var token = _currentToken;
+            Eat(TokenType.Equals);
+            var right = ParseExpression();
+            var node = new AssignmentNode(left, token, right);
+            return node;
+        }
+
+        private Node ParseEmptyStatement() => new EmptyStatementNode();
+
+        public Node Parse()
+        {
+            var node = ParseProgram();
+
+            if (_currentToken.Type != TokenType.EOF)
+                throw new Exception($"Unexpected token: {_currentToken.Type}");
+
+            return node;
+        }
     }
 }

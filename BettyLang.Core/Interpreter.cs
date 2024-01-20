@@ -6,6 +6,8 @@ namespace BettyLang.Core
     {
         private readonly Parser _parser;
 
+        private Dictionary<string, object> _globalScope = new();
+
         public Interpreter(Parser parser) { _parser = parser; }
 
         public override InterpreterResult Visit(BinaryOperatorNode node)
@@ -44,7 +46,42 @@ namespace BettyLang.Core
         }
 
         public override InterpreterResult Visit(NumberNode node) => new InterpreterResult(node.Value);
+
         public override InterpreterResult Visit(StringNode node) => new InterpreterResult(node.Value);
+
+        public override InterpreterResult Visit(CompoundStatementNode node)
+        {
+            foreach (var child in node.Children)
+                child.Accept(this);
+
+            return new InterpreterResult(null);
+        }
+
+        public override InterpreterResult Visit(AssignmentNode node)
+        {
+            if (node.Left is VariableNode variableNode)
+            {
+                string variableName = variableNode.Value;
+                var rightResult = node.Right.Accept(this);
+                _globalScope[variableName] = rightResult.Value;
+                return new InterpreterResult(null);
+            }
+            else
+                throw new Exception("The left-hand side of an assignment must be a variable.");
+        }
+
+        public override InterpreterResult Visit(VariableNode node)
+        {
+            string variableName = node.Value;
+
+            if (_globalScope.TryGetValue(variableName, out var value))
+                return new InterpreterResult(value);
+            else
+                throw new Exception($"Variable '{variableName}' is not defined.");
+        }
+
+        public override InterpreterResult Visit(EmptyStatementNode node) => new InterpreterResult(null);
+
         public override InterpreterResult Visit(UnaryOperatorNode node)
         {
             TokenType op = node.Operator.Type;
@@ -58,10 +95,10 @@ namespace BettyLang.Core
             throw new InvalidOperationException($"Unsupported unary operator {op}");
         }
 
-        public InterpreterResult Interpret()
+        public void Interpret()
         {
             var tree = _parser.Parse();
-            return tree.Accept(this);
+            tree.Accept(this);
         }
     }
 }
