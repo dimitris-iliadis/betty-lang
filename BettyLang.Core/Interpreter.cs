@@ -6,7 +6,7 @@ namespace BettyLang.Core
     {
         private readonly Parser _parser;
 
-        private Dictionary<string, object> _globalScope = new();
+        private Dictionary<string, object> _globalScope = [];
 
         public Interpreter(Parser parser) { _parser = parser; }
 
@@ -49,17 +49,22 @@ namespace BettyLang.Core
 
         public override InterpreterResult Visit(StringNode node) => new InterpreterResult(node.Value);
 
-        public override InterpreterResult Visit(ModuleNode node)
+        public override InterpreterResult Visit(ProgramNode node)
         {
-            node.Block.Accept(this);
+            // Visit each function definition and store them in a function table or similar structure
+            foreach (var function in node.Functions)
+            {
+                function.Accept(this);
+            }
 
-            return new InterpreterResult(null);
+            // Execute the main block
+            return node.MainBlock.Accept(this);
         }
 
         public override InterpreterResult Visit(CompoundStatementNode node)
         {
-            foreach (var child in node.Children)
-                child.Accept(this);
+            foreach (var statement in node.Statements)
+                statement.Accept(this);
 
             return new InterpreterResult(null);
         }
@@ -88,6 +93,16 @@ namespace BettyLang.Core
         }
 
         public override InterpreterResult Visit(EmptyStatementNode node) => new InterpreterResult(null);
+
+        public override InterpreterResult Visit(FunctionDefinitionNode node)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override InterpreterResult Visit(ParameterNode node)
+        {
+            throw new NotImplementedException();
+        }
 
         public override InterpreterResult Visit(UnaryOperatorNode node)
         {

@@ -8,8 +8,16 @@ namespace BettyLang.CLI
         {
             try
             {
-                Console.Write("betty> ");
-                string? input = Console.ReadLine();
+                string input = """
+                    function hello()
+                    {
+                    }
+
+                    main
+                    {
+                        a = "hello"; a = 3; // This is a comment
+                    }
+                    """;
                 var lexer = new Lexer(input);
                 var parser = new Parser(lexer);
                 var interpreter = new Interpreter(parser);

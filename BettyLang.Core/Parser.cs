@@ -123,16 +123,7 @@ namespace BettyLang.Core
             return node;
         }
 
-        private Node ParseModule()
-        {
-            Eat(TokenType.Module);
-            var variableNode = (VariableNode)ParseVariable();
-            string moduleName = variableNode.Value;
-            var blockNode = ParseCompoundStatement();
-            return new ModuleNode(moduleName, blockNode);
-        }
-
-        private Node ParseCompoundStatement()
+        private CompoundStatementNode ParseCompoundStatement()
         {
             Eat(TokenType.LBracket);
             var nodes = ParseStatementList();
@@ -140,7 +131,7 @@ namespace BettyLang.Core
 
             var root = new CompoundStatementNode();
             foreach (var node in nodes)
-                root.Children.Add(node);
+                root.Statements.Add(node);
 
             return root;
         }
@@ -180,17 +171,90 @@ namespace BettyLang.Core
         {
             var left = ParseVariable();
             var token = _currentToken;
-            Eat(TokenType.Equals);
+            Eat(TokenType.Equal);
             var right = ParseExpression();
             var node = new AssignmentNode(left, token, right);
             return node;
         }
-
         private Node ParseEmptyStatement() => new EmptyStatementNode();
+
+        private FunctionDefinitionNode ParseFunctionDefinition()
+        {
+            // Assuming "function" token is already consumed
+            string functionName = _currentToken.Value;
+            Eat(TokenType.Identifier); // Function name
+
+            Eat(TokenType.LParen); // Opening parenthesis
+            List<ParameterNode> parameters = ParseParameters();
+            Eat(TokenType.RParen); // Closing parenthesis
+
+            CompoundStatementNode body = ParseCompoundStatement(); // Function body
+
+            return new FunctionDefinitionNode(functionName, parameters, body);
+        }
+
+        private List<ParameterNode> ParseParameters()
+        {
+            List<ParameterNode> parameters = new List<ParameterNode>();
+
+            if (_currentToken.Type != TokenType.RParen) // Check if parameter list is empty
+            {
+                do
+                {
+                    if (_currentToken.Type == TokenType.Identifier)
+                    {
+                        string paramName = _currentToken.Value.ToString();
+                        parameters.Add(new ParameterNode(paramName));
+                        Eat(TokenType.Identifier);
+                    }
+                    else
+                    {
+                        throw new Exception($"Expected an identifier, found {_currentToken.Type}.");
+                    }
+
+                    if (_currentToken.Type == TokenType.Comma)
+                    {
+                        Eat(TokenType.Comma); // Eat comma and expect another parameter
+                    }
+                }
+                while (_currentToken.Type != TokenType.RParen);
+            }
+
+            return parameters;
+        }
+
+        private CompoundStatementNode ParseMainBlock() => ParseCompoundStatement();
+
+        private Node ParseProgram()
+        {
+            List<FunctionDefinitionNode> functions = new List<FunctionDefinitionNode>();
+            CompoundStatementNode mainBlock = null;
+
+            while (_currentToken.Type != TokenType.EOF && _currentToken.Type != TokenType.Main)
+            {
+                if (_currentToken.Type == TokenType.Function)
+                {
+                    Eat(TokenType.Function);
+                    functions.Add(ParseFunctionDefinition());
+                }
+                else
+                    throw new Exception("Unexpected token: " + _currentToken.Type);
+            }
+
+            if (_currentToken.Type == TokenType.Main)
+            {
+                Eat(TokenType.Main);
+                mainBlock = ParseMainBlock();
+            }
+            else
+                throw new Exception("Missing main block in the program");
+
+            return new ProgramNode(functions, mainBlock);
+        }
 
         public Node Parse()
         {
-            var node = ParseModule();
+            var node = ParseProgram();
 
             if (_currentToken.Type != TokenType.EOF)
                 throw new Exception($"Unexpected token: {_currentToken.Type}");

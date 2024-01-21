@@ -6,9 +6,10 @@
         private int _position;
         private char _currentChar;
 
-        private static readonly Dictionary<string, Token> ReservedKeywords = new()
+        private static readonly Dictionary<string, Token> _keywords = new()
         {
-            ["module"] = new Token(TokenType.Module, "module"),
+            ["main"] = new Token(TokenType.Main, "main"),
+            ["function"] = new Token(TokenType.Function, "function"),
         };
 
         public Lexer(string input)
@@ -133,13 +134,13 @@
 
             var result = stringBuilder.ToString().ToLower();
 
-            if (ReservedKeywords.TryGetValue(result, out Token token))
+            if (_keywords.TryGetValue(result, out Token token))
                 return token;
 
             return new Token(TokenType.Identifier, result);
         }
 
-        private char PeekChar() => (_position + 1 >= _input.Length) ? '\0' : _input[_position + 1];
+        private char PeekNextChar() => (_position + 1 >= _input.Length) ? '\0' : _input[_position + 1];
 
         public Token GetNextToken()
         {
@@ -157,20 +158,27 @@
                 if (Char.IsDigit(_currentChar))
                     return new Token(TokenType.NumberLiteral, ScanNumberLiteral(hasLeadingDot: false));
 
-                if (_currentChar == '.' && Char.IsDigit(PeekChar()))
+                if (_currentChar == '.' && Char.IsDigit(PeekNextChar()))
                     return new Token(TokenType.NumberLiteral, ScanNumberLiteral(hasLeadingDot: true));
 
                 if (_currentChar == '=')
                 {
-                    if (PeekChar() == '=')
+                    if (PeekNextChar() == '=')
                     {
                         Advance();
                         Advance();
-                        return new Token(TokenType.EqualsEquals, "==");
+                        return new Token(TokenType.EqualEqual, "==");
                     }
 
                     Advance();
-                    return new Token(TokenType.Equals, "=");
+                    return new Token(TokenType.Equal, "=");
+                }
+
+                if (_currentChar == '/' && PeekNextChar() == '/')
+                {
+                    while (_currentChar != '\0' && _currentChar != '\n')
+                        Advance();
+                    continue;
                 }
 
                 if (_currentChar == '\'' || _currentChar == '"')

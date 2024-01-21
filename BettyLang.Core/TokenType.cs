@@ -6,11 +6,11 @@
 
         Plus, Minus, Mul, Div, Caret,
 
-        LParen, RParen, LBracket, RBracket, Semicolon,
+        LParen, RParen, LBracket, RBracket, Semicolon, Comma,
 
-        Module,
+        Main, Function,
 
-        Equals, EqualsEquals,
+        Equal, EqualEqual,
 
         EOF
     }

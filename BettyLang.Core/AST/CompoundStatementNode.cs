@@ -2,9 +2,9 @@
 {
     public class CompoundStatementNode : Node
     {
-        public List<Node> Children { get; set; }
+        public List<Node> Statements { get; set; }
 
-        public CompoundStatementNode() { Children = []; }
+        public CompoundStatementNode() { Statements = []; }
 
         public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
     }
