@@ -1,16 +1,16 @@
 ﻿namespace BettyLang.Core.AST
 {
-    public class UnaryOperatorNode : Node
+    public class UnaryOperatorNode : ASTNode
     {
         public Token Operator { get; }
-        public Node Expression { get; }
+        public ASTNode Expression { get; }
 
-        public UnaryOperatorNode(Token op, Node expression)
+        public UnaryOperatorNode(Token op, ASTNode expression)
         {
             Operator = op;
             Expression = expression;
         }
 
-        public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
+        public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);
     }
 }

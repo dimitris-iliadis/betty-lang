@@ -1,6 +1,6 @@
 ﻿namespace BettyLang.Core.AST
 {
-    public class ProgramNode : Node
+    public class ProgramNode : ASTNode
     {
         public List<FunctionDefinitionNode> Functions { get; }
         public CompoundStatementNode MainBlock { get; }
@@ -11,6 +11,6 @@
             MainBlock = mainBlock;
         }
 
-        public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
+        public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);
     }
 }

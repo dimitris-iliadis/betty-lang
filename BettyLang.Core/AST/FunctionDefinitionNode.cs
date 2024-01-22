@@ -1,6 +1,6 @@
 ﻿namespace BettyLang.Core.AST
 {
-    public class FunctionDefinitionNode : Node
+    public class FunctionDefinitionNode : ASTNode
     {
         public string FunctionName { get; }
         public List<ParameterNode> Parameters { get; }
@@ -13,6 +13,6 @@
             Body = body;
         }
 
-        public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
+        public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);
     }
 }

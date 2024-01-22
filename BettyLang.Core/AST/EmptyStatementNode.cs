@@ -1,9 +1,9 @@
 ﻿namespace BettyLang.Core.AST
 {
-    public class EmptyStatementNode : Node
+    public class EmptyStatementNode : ASTNode
     {
         public EmptyStatementNode() { }
 
-        public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
+        public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);
     }
 }

@@ -1,11 +1,11 @@
 ﻿namespace BettyLang.Core.AST
 {
-    public class StringNode : Node
+    public class StringNode : ASTNode
     {
         public string Value { get; }
 
         public StringNode(string value) { Value = value; }
 
-        public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
+        public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);
     }
 }

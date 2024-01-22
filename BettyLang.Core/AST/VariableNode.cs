@@ -1,6 +1,6 @@
 ﻿namespace BettyLang.Core.AST
 {
-    public class VariableNode : Node
+    public class VariableNode : ASTNode
     {
         public Token Token { get; }
         public string Value { get; }
@@ -11,6 +11,6 @@
             Value = token.Value;
         }
 
-        public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
+        public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);
     }
 }

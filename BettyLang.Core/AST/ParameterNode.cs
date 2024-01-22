@@ -1,10 +1,11 @@
-﻿using BettyLang.Core.AST;
-
-public class ParameterNode : Node
+﻿namespace BettyLang.Core.AST
 {
-    public string Name { get; }
+    public class ParameterNode : ASTNode
+    {
+        public string Name { get; }
 
-    public ParameterNode(string name) { Name = name; }
+        public ParameterNode(string name) { Name = name; }
 
-    public override T Accept<T>(NodeVisitor<T> visitor) => visitor.Visit(this);
+        public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);
+    }
 }

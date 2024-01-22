@@ -9,10 +9,6 @@ namespace BettyLang.CLI
             try
             {
                 string input = """
-                    function hello()
-                    {
-                    }
-
                     main
                     {
                         a = "hello"; a = 3; // This is a comment
