@@ -25,7 +25,7 @@ namespace BettyLang.Core
         {
             var token = _currentToken;
             Consume(TokenType.StringLiteral);
-            return new StringNode(token.Value.ToString()!);
+            return new StringLiteralNode(token.Value.ToString()!);
         }
 
         private ASTNode ParseVariable()
@@ -39,7 +39,19 @@ namespace BettyLang.Core
         {
             var token = _currentToken;
 
-            if (token.Type == TokenType.Plus)
+            if (token.Type == TokenType.TrueLiteral)
+            {
+                Consume(TokenType.TrueLiteral);
+                var node = new BooleanLiteralNode(true);
+                return node;
+            }
+            else if (token.Type == TokenType.FalseLiteral)
+            {
+                Consume(TokenType.FalseLiteral);
+                var node = new BooleanLiteralNode(false);
+                return node;
+            }
+            else if (token.Type == TokenType.Plus)
             {
                 Consume(TokenType.Plus);
                 var node = new UnaryOperatorNode(token, ParseFactor());
@@ -51,10 +63,16 @@ namespace BettyLang.Core
                 var node = new UnaryOperatorNode(token, ParseFactor());
                 return node;
             }
+            else if (token.Type == TokenType.Not)
+            {
+                Consume(TokenType.Not);
+                var node = new UnaryOperatorNode(token, ParseFactor());
+                return node;
+            }
             else if (token.Type == TokenType.NumberLiteral)
             {
                 Consume(TokenType.NumberLiteral);
-                return new NumberNode(token);
+                return new NumberLiteralNode(token);
             }
             else if (token.Type == TokenType.LParen)
             {
@@ -107,7 +125,7 @@ namespace BettyLang.Core
 
         private ASTNode ParseExpression()
         {
-            var node = ParseTerm();
+            var node = ParseOrExpression();
 
             while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus)
             {
@@ -171,7 +189,7 @@ namespace BettyLang.Core
         {
             var left = ParseVariable();
             var token = _currentToken;
-            Consume(TokenType.Equal);
+            Consume(TokenType.Assign);
             var right = ParseExpression();
             var node = new AssignmentNode(left, token, right);
             return node;
@@ -228,7 +246,6 @@ namespace BettyLang.Core
         private ASTNode ParseProgram()
         {
             List<FunctionDefinitionNode> functions = new List<FunctionDefinitionNode>();
-            CompoundStatementNode mainBlock = null;
 
             while (_currentToken.Type != TokenType.EOF && _currentToken.Type != TokenType.Main)
             {
@@ -244,12 +261,63 @@ namespace BettyLang.Core
             if (_currentToken.Type == TokenType.Main)
             {
                 Consume(TokenType.Main);
-                mainBlock = ParseMainBlock();
+                var mainBlock = ParseMainBlock();
+                return new ProgramNode(functions, mainBlock);
             }
             else
                 throw new Exception("Missing main block in the program");
+        }
 
-            return new ProgramNode(functions, mainBlock);
+        private ASTNode ParseComparisonExpression()
+        {
+            var node = ParseTerm();
+
+            while (IsComparisonOperator(_currentToken.Type))
+            {
+                var token = _currentToken;
+                Consume(token.Type); // Consume the comparison operator
+                node = new BinaryOperatorNode(node, token, ParseTerm());
+            }
+
+            return node;
+        }
+
+        private bool IsComparisonOperator(TokenType type)
+        {
+            return type == TokenType.GreaterThan
+                || type == TokenType.LessThan
+                || type == TokenType.GreaterThanOrEqual
+                || type == TokenType.LessThanOrEqual
+                || type == TokenType.Equal
+                || type == TokenType.NotEqual;
+        }
+
+        private ASTNode ParseOrExpression()
+        {
+            var node = ParseAndExpression();
+
+            while (_currentToken.Type == TokenType.Or)
+            {
+                var token = _currentToken;
+                Consume(token.Type); // Consume the Or operator
+                node = new BinaryOperatorNode(node, token, ParseAndExpression());
+            }
+
+            return node;
+        }
+
+        private ASTNode ParseAndExpression()
+        {
+            var node = ParseComparisonExpression();
+
+            while (_currentToken.Type == TokenType.And)
+            {
+                var token = _currentToken;
+                Consume(token.Type); // Consume the And operator
+                node = new BinaryOperatorNode(node, token, ParseComparisonExpression());
+            }
+
+            return node;
         }
 
         public ASTNode Parse()

@@ -1,11 +1,11 @@
 ﻿namespace BettyLang.Core.AST
 {
-    public class NumberNode : ASTNode
+    public class NumberLiteralNode : ASTNode
     {
         public Token Token { get; }
         public double Value { get; }
 
-        public NumberNode(Token token)
+        public NumberLiteralNode(Token token)
         {
             Token = token;
             Value = double.Parse(token.Value);

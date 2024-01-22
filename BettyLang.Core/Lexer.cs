@@ -1,4 +1,6 @@
-﻿namespace BettyLang.Core
+﻿using BettyLang.Core.AST;
+
+namespace BettyLang.Core
 {
     public class Lexer
     {
@@ -10,6 +12,8 @@
         {
             ["main"] = new Token(TokenType.Main, "main"),
             ["function"] = new Token(TokenType.Function, "function"),
+            ["true"] = new Token(TokenType.TrueLiteral, "true"),
+            ["false"] = new Token(TokenType.FalseLiteral, "false"),
         };
 
         public Lexer(string input)
@@ -37,11 +41,10 @@
         private string ScanStringLiteral()
         {
             var stringBuilder = new System.Text.StringBuilder();
-            char quoteType = _currentChar; // should be either ' or "
 
             Advance(); // Skip the opening quote
 
-            while (_currentChar != quoteType)
+            while (_currentChar != '"')
             {
                 if (_currentChar == '\\') // Check for escape character
                 {
@@ -115,6 +118,10 @@
                 '{' => (TokenType.LBracket, "{"),
                 '}' => (TokenType.RBracket, "}"),
                 ';' => (TokenType.Semicolon, ";"),
+                '!' => (TokenType.Not, "!"),
+                '&' => (TokenType.And, "&"),
+                '=' => (TokenType.Assign, "="),
+                '|' => (TokenType.Or, "|"),
                 _ => throw new Exception($"Invalid character '{_currentChar}' at position {_position}")
             };
 
@@ -126,7 +133,7 @@
         {
             var stringBuilder = new System.Text.StringBuilder();
 
-            while (_currentChar != '\0' && char.IsLetterOrDigit(_currentChar))
+            while (_currentChar != '\0' && Char.IsLetterOrDigit(_currentChar))
             {
                 stringBuilder.Append(_currentChar);
                 Advance();
@@ -134,13 +141,56 @@
 
             var result = stringBuilder.ToString().ToLower();
 
-            if (_keywords.TryGetValue(result, out Token token))
+            if (_keywords.TryGetValue(result, out Token? token))
                 return token;
 
             return new Token(TokenType.Identifier, result);
         }
 
         private char PeekNextChar() => (_position + 1 >= _input.Length) ? '\0' : _input[_position + 1];
+
+        private Token ScanComparisonOperator()
+        {
+            if (_currentChar == '=' && PeekNextChar() == '=')
+            {
+                Advance();
+                Advance();
+                return new Token(TokenType.Equal, "==");
+            }
+
+            if (_currentChar == '<' || _currentChar == '>')
+            {
+                char symbol = _currentChar;
+
+                if (PeekNextChar() == '=')
+                {
+                    Advance();
+                    Advance();
+                    if (symbol == '<')
+                        return new Token(TokenType.LessThanOrEqual, "<=");
+                    else
+                        return new Token(TokenType.GreaterThanOrEqual, ">=");
+                }
+
+                Advance();
+
+                if (symbol == '<')
+                    return new Token(TokenType.LessThan, "<");
+                else
+                    return new Token(TokenType.GreaterThan, ">");
+            }
+
+            if (_currentChar == '!' && PeekNextChar() == '=')
+                return new Token(TokenType.NotEqual, "!=");
+
+            throw new Exception($"Invalid character '{_currentChar}' at position {_position}");
+        }
+
+        private void SkipComment()
+        {
+            while (_currentChar != '\0' && _currentChar != '\n')
+                Advance();
+        }
 
         public Token GetNextToken()
         {
@@ -149,6 +199,12 @@
                 if (Char.IsWhiteSpace(_currentChar))
                 {
                     SkipWhitespace();
+                    continue;
+                }
+
+                if (_currentChar == '/' && PeekNextChar() == '/')
+                {
+                    SkipComment();
                     continue;
                 }
 
@@ -161,27 +217,13 @@
                 if (_currentChar == '.' && Char.IsDigit(PeekNextChar()))
                     return new Token(TokenType.NumberLiteral, ScanNumberLiteral(hasLeadingDot: true));
 
-                if (_currentChar == '=')
-                {
-                    if (PeekNextChar() == '=')
-                    {
-                        Advance();
-                        Advance();
-                        return new Token(TokenType.EqualEqual, "==");
-                    }
+                if (_currentChar == '<' 
+                    || _currentChar == '>' 
+                    || (_currentChar == '=' && PeekNextChar() == '=') 
+                    || (_currentChar == '!' && PeekNextChar() == '='))
+                    return ScanComparisonOperator();
 
-                    Advance();
-                    return new Token(TokenType.Equal, "=");
-                }
-
-                if (_currentChar == '/' && PeekNextChar() == '/')
-                {
-                    while (_currentChar != '\0' && _currentChar != '\n')
-                        Advance();
-                    continue;
-                }
-
-                if (_currentChar == '\'' || _currentChar == '"')
+                if (_currentChar == '"')
                     return new Token(TokenType.StringLiteral, ScanStringLiteral());
 
                 return ScanSingleCharToken();

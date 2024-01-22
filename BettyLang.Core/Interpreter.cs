@@ -10,10 +10,60 @@ namespace BettyLang.Core
 
         public Interpreter(Parser parser) { _parser = parser; }
 
+        private InterpreterResult PerformComparison(object leftValue, object rightValue, TokenType operatorType)
+        {
+            if (leftValue is double leftDouble && rightValue is double rightDouble)
+            {
+                return operatorType switch
+                {
+                    TokenType.Equal => new InterpreterResult(leftDouble == rightDouble),
+                    TokenType.NotEqual => new InterpreterResult(leftDouble != rightDouble),
+                    TokenType.LessThan => new InterpreterResult(leftDouble < rightDouble),
+                    TokenType.LessThanOrEqual => new InterpreterResult(leftDouble <= rightDouble),
+                    TokenType.GreaterThan => new InterpreterResult(leftDouble > rightDouble),
+                    TokenType.GreaterThanOrEqual => new InterpreterResult(leftDouble >= rightDouble),
+                    _ => throw new Exception($"Unsupported operator for number comparison: {operatorType}")
+                };
+            }
+            else if (leftValue is string leftString && rightValue is string rightString)
+            {
+                return operatorType switch
+                {
+                    TokenType.Equal => new InterpreterResult(leftString == rightString),
+                    TokenType.NotEqual => new InterpreterResult(leftString != rightString),
+                    _ => throw new Exception($"Unsupported operator for string comparison: {operatorType}")
+                };
+            }
+            else if (leftValue is bool leftBool && rightValue is bool rightBool)
+            {
+                return operatorType switch
+                {
+                    TokenType.Equal => new InterpreterResult(leftBool == rightBool),
+                    TokenType.NotEqual => new InterpreterResult(leftBool != rightBool),
+                    _ => throw new Exception($"Unsupported operator for boolean comparison: {operatorType}")
+                };
+            }
+            else
+            {
+                throw new Exception("Type mismatch or unsupported types for comparison.");
+            }
+        }
+
         public InterpreterResult Visit(BinaryOperatorNode node)
         {
             var leftResult = node.Left.Accept(this);
             var rightResult = node.Right.Accept(this);
+
+            if (leftResult.Value is bool leftBool && rightResult.Value is bool rightBool)
+            {
+                switch (node.Operator.Type)
+                {
+                    case TokenType.And:
+                        return new InterpreterResult(leftBool && rightBool);
+                    case TokenType.Or:
+                        return new InterpreterResult(leftBool || rightBool);
+                }
+            }
 
             if (node.Operator.Type == TokenType.Plus &&
                 (leftResult.Value is string || rightResult.Value is string))
@@ -37,17 +87,28 @@ namespace BettyLang.Core
                         return new InterpreterResult(leftOperand / rightOperand);
                     case TokenType.Caret:
                         return new InterpreterResult(Math.Pow(leftOperand, rightOperand));
-                    default:
-                        throw new NotImplementedException($"Operation {node.Operator.Type} is not supported.");
                 }
             }
 
-            throw new InvalidOperationException("Unsupported types or operators");
+            switch (node.Operator.Type)
+            {
+                case TokenType.Equal:
+                case TokenType.NotEqual:
+                case TokenType.LessThan:
+                case TokenType.LessThanOrEqual:
+                case TokenType.GreaterThan:
+                case TokenType.GreaterThanOrEqual:
+                    return PerformComparison(leftResult.Value!, rightResult.Value!, node.Operator.Type);
+            }
+
+            throw new Exception($"Unsupported binary operator: {node.Operator.Type}");
         }
 
-        public InterpreterResult Visit(NumberNode node) => new InterpreterResult(node.Value);
+        public InterpreterResult Visit(BooleanLiteralNode node) => new InterpreterResult(node.Value);
 
-        public InterpreterResult Visit(StringNode node) => new InterpreterResult(node.Value);
+        public InterpreterResult Visit(NumberLiteralNode node) => new InterpreterResult(node.Value);
+
+        public InterpreterResult Visit(StringLiteralNode node) => new InterpreterResult(node.Value);
 
         public InterpreterResult Visit(ProgramNode node)
         {
@@ -110,10 +171,15 @@ namespace BettyLang.Core
             TokenType op = node.Operator.Type;
             var operandResult = node.Expression.Accept(this);
 
-            if (op == TokenType.Plus)
-                return new InterpreterResult(+(double)operandResult.Value!);
-            else if (op == TokenType.Minus)
-                return new InterpreterResult(-(double)operandResult.Value!);
+            switch (op)
+            {
+                case TokenType.Plus:
+                    return new InterpreterResult(+(double)operandResult.Value!);
+                case TokenType.Minus:
+                    return new InterpreterResult(-(double)operandResult.Value!);
+                case TokenType.Not:
+                    return new InterpreterResult(!(bool)operandResult.Value!);
+            }
 
             throw new InvalidOperationException($"Unsupported unary operator {op}");
         }

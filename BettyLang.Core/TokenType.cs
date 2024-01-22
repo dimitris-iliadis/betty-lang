@@ -2,7 +2,9 @@
 {
     public enum TokenType
     {
-        NumberLiteral, StringLiteral, Identifier,
+        NumberLiteral, StringLiteral, TrueLiteral, FalseLiteral, Identifier,
+
+        Not, And, Or,
 
         Plus, Minus, Mul, Div, Caret,
 
@@ -10,7 +12,9 @@
 
         Main, Function,
 
-        Equal, EqualEqual,
+        Assign,
+        
+        Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, NotEqual,
 
         EOF
     }
