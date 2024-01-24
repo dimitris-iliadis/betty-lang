@@ -178,6 +178,27 @@ namespace BettyLang.Core
                 throw new Exception($"Variable '{variableName}' is not defined.");
         }
 
+        public InterpreterResult Visit(InputStatementNode node)
+        {
+            // Read input from the user
+            string userInput = Console.ReadLine() ?? string.Empty;
+
+            // Try to parse the input as a double. If it fails, treat it as a string
+            if (double.TryParse(userInput, out double numericValue))
+            {
+                // Input is successfully parsed as a double
+                _globalScope[node.VariableName] = numericValue;
+            }
+            else
+            {
+                // Input is treated as a string
+                _globalScope[node.VariableName] = userInput;
+            }
+
+            // Return a null or appropriate result
+            return new InterpreterResult(null);
+        }
+
         public InterpreterResult Visit(PrintStatementNode node)
         {
             // Evaluate the expression contained in the print statement

@@ -16,9 +16,11 @@ namespace BettyLang.CLI
                         print "Hello World " + a + "\n";
                         if (true && 2 > 1) {
                             a = 13;
-                            print "Alright!"; // This is a comment
+                            print "What's your name? "; // This is a comment
+                            input x;
                         }
-                        print a;
+                        print a + "\n";
+                        print "Hi " + x;
                     }
                     """;
                 var lexer = new Lexer(input);

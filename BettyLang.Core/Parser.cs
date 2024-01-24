@@ -169,6 +169,19 @@ namespace BettyLang.Core
             return results;
         }
 
+        private ASTNode ParseInputStatement()
+        {
+            Consume(TokenType.Input);
+
+            if (_currentToken.Type != TokenType.Identifier)
+                throw new Exception("Expected variable name after 'input'");
+
+            string variableName = _currentToken.Value.ToString();
+            Consume(TokenType.Identifier);
+
+            return new InputStatementNode(variableName);
+        }
+
         private ASTNode ParsePrintStatement()
         {
             Consume(TokenType.Print);
@@ -188,17 +201,15 @@ namespace BettyLang.Core
 
         private ASTNode ParseStatement()
         {
-            ASTNode node;
-            if (_currentToken.Type == TokenType.LBracket)
-                node = ParseCompoundStatement();
-            else if (_currentToken.Type == TokenType.Identifier)
-                node = ParseAssignmentStatement();
-            else if (_currentToken.Type == TokenType.Print)
-                node = ParsePrintStatement();
-            else if (_currentToken.Type == TokenType.If)
-                node = ParseIfStatement();
-            else
-                node = ParseEmptyStatement();
+            var node = _currentToken.Type switch
+            {
+                TokenType.LBracket => ParseCompoundStatement(),
+                TokenType.Identifier => ParseAssignmentStatement(),
+                TokenType.Print => ParsePrintStatement(),
+                TokenType.Input => ParseInputStatement(),
+                TokenType.If => ParseIfStatement(),
+                _ => ParseEmptyStatement()
+            };
 
             return node;
         }
