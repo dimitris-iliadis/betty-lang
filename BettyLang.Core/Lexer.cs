@@ -5,6 +5,7 @@
         private readonly string _input;
         private int _position;
         private char _currentChar;
+        private readonly System.Text.StringBuilder _stringBuilder = new();
 
         private static readonly Dictionary<string, Token> _keywords = new()
         {
@@ -12,6 +13,16 @@
             ["function"] = new Token(TokenType.Function, "function"),
             ["true"] = new Token(TokenType.TrueLiteral, "true"),
             ["false"] = new Token(TokenType.FalseLiteral, "false"),
+        };
+
+        private static readonly Dictionary<string, TokenType> _doubleCharOperators = new()
+        {
+            ["=="] = TokenType.Equal,
+            ["<="] = TokenType.LessThanOrEqual,
+            [">="] = TokenType.GreaterThanOrEqual,
+            ["!="] = TokenType.NotEqual,
+            ["&&"] = TokenType.And,
+            ["||"] = TokenType.Or
         };
 
         public Lexer(string input)
@@ -38,7 +49,7 @@
 
         private string ScanStringLiteral()
         {
-            var stringBuilder = new System.Text.StringBuilder();
+            _stringBuilder.Clear();
 
             Advance(); // Skip the opening quote
 
@@ -49,11 +60,11 @@
                     Advance(); // Skip the escape character
                     switch (_currentChar)
                     {
-                        case 'n': stringBuilder.Append('\n'); break; // Newline
-                        case 't': stringBuilder.Append('\t'); break; // Tab
-                        case '"': stringBuilder.Append('\"'); break; // Double quote
-                        case '\'': stringBuilder.Append('\''); break; // Single quote
-                        case '\\': stringBuilder.Append('\\'); break; // Backslash
+                        case 'n': _stringBuilder.Append('\n'); break; // Newline
+                        case 't': _stringBuilder.Append('\t'); break; // Tab
+                        case '"': _stringBuilder.Append('\"'); break; // Double quote
+                        case '\'': _stringBuilder.Append('\''); break; // Single quote
+                        case '\\': _stringBuilder.Append('\\'); break; // Backslash
                         default:
                             throw new Exception($"Unrecognized escape sequence: \\{_currentChar}");
                     }
@@ -61,7 +72,7 @@
                 }
                 else
                 {
-                    stringBuilder.Append(_currentChar);
+                    _stringBuilder.Append(_currentChar);
                     Advance();
                 }
 
@@ -70,18 +81,18 @@
             }
 
             Advance(); // Skip the closing quote
-            return stringBuilder.ToString();
+            return _stringBuilder.ToString();
         }
 
         private string ScanNumberLiteral(bool hasLeadingDot)
         {
-            var stringBuilder = new System.Text.StringBuilder();
+            _stringBuilder.Clear();
 
             bool dotEncountered = hasLeadingDot;
 
             if (hasLeadingDot)
             {
-                stringBuilder.Append("0.");
+                _stringBuilder.Append("0.");
                 Advance(); // Move past the dot character
             }
 
@@ -95,11 +106,11 @@
                     dotEncountered = true;
                 }
 
-                stringBuilder.Append(_currentChar);
+                _stringBuilder.Append(_currentChar);
                 Advance();
             }
 
-            return stringBuilder.ToString();
+            return _stringBuilder.ToString();
         }
 
         private Token ScanSingleCharToken()
@@ -118,6 +129,8 @@
                 ';' => (TokenType.Semicolon, ";"),
                 '!' => (TokenType.Not, "!"),
                 '=' => (TokenType.Assign, "="),
+                '<' => (TokenType.LessThan, "<"),
+                '>' => (TokenType.GreaterThan, ">"),
                 _ => throw new Exception($"Invalid character '{_currentChar}' at position {_position}")
             };
 
@@ -127,15 +140,15 @@
 
         private Token ScanIdentifierOrKeyword()
         {
-            var stringBuilder = new System.Text.StringBuilder();
+            _stringBuilder.Clear();
 
             while (_currentChar != '\0' && Char.IsLetterOrDigit(_currentChar))
             {
-                stringBuilder.Append(_currentChar);
+                _stringBuilder.Append(_currentChar);
                 Advance();
             }
 
-            var result = stringBuilder.ToString().ToLower();
+            var result = _stringBuilder.ToString().ToLower();
 
             if (_keywords.TryGetValue(result, out Token? token))
                 return token;
@@ -144,47 +157,6 @@
         }
 
         private char PeekNextChar() => (_position + 1 >= _input.Length) ? '\0' : _input[_position + 1];
-
-        private Token ScanComparisonOperator()
-        {
-            if (_currentChar == '=' && PeekNextChar() == '=')
-            {
-                Advance();
-                Advance();
-                return new Token(TokenType.Equal, "==");
-            }
-
-            if (_currentChar == '<' || _currentChar == '>')
-            {
-                char symbol = _currentChar;
-
-                if (PeekNextChar() == '=')
-                {
-                    Advance();
-                    Advance();
-                    if (symbol == '<')
-                        return new Token(TokenType.LessThanOrEqual, "<=");
-                    else
-                        return new Token(TokenType.GreaterThanOrEqual, ">=");
-                }
-
-                Advance();
-
-                if (symbol == '<')
-                    return new Token(TokenType.LessThan, "<");
-                else
-                    return new Token(TokenType.GreaterThan, ">");
-            }
-
-            if (_currentChar == '!' && PeekNextChar() == '=')
-            {
-                Advance();
-                Advance();
-                return new Token(TokenType.NotEqual, "!=");
-            }
-
-            throw new Exception($"Invalid character '{_currentChar}' at position {_position}");
-        }
 
         private void SkipComment()
         {
@@ -217,25 +189,13 @@
                 if (_currentChar == '.' && Char.IsDigit(PeekNextChar()))
                     return new Token(TokenType.NumberLiteral, ScanNumberLiteral(hasLeadingDot: true));
 
-                if (_currentChar == '&' && PeekNextChar() == '&')
+                string op = _currentChar.ToString() + PeekNextChar();
+                if (_doubleCharOperators.TryGetValue(op, out TokenType type))
                 {
                     Advance();
                     Advance();
-                    return new Token(TokenType.And, "&&");
+                    return new Token(type, op);
                 }
-
-                if (_currentChar == '|' && PeekNextChar() == '|')
-                {
-                    Advance();
-                    Advance();
-                    return new Token(TokenType.Or, "||");
-                }
-
-                if (_currentChar == '<' 
-                    || _currentChar == '>' 
-                    || (_currentChar == '=' && PeekNextChar() == '=') 
-                    || (_currentChar == '!' && PeekNextChar() == '='))
-                    return ScanComparisonOperator();
 
                 if (_currentChar == '"')
                     return new Token(TokenType.StringLiteral, ScanStringLiteral());

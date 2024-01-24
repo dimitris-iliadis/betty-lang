@@ -11,7 +11,7 @@ namespace BettyLang.CLI
                 string input = """
                     main
                     {
-                        a = 1 < 3 && true || false;
+                        a = 2^5 < 3 && true;
                     }
                     """;
                 var lexer = new Lexer(input);

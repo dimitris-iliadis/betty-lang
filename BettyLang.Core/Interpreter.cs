@@ -44,9 +44,7 @@ namespace BettyLang.Core
                 };
             }
             else
-            {
                 throw new Exception("Type mismatch or unsupported types for comparison.");
-            }
         }
 
         public InterpreterResult Visit(BinaryOperatorNode node)
