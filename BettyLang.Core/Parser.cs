@@ -159,6 +159,13 @@ namespace BettyLang.Core
             return results;
         }
 
+        private ASTNode ParsePrintStatement()
+        {
+            Consume(TokenType.Print);
+            ASTNode expression = ParseExpression();
+            return new PrintStatementNode(expression);
+        }
+
         private ASTNode ParseStatement()
         {
             ASTNode node;
@@ -166,6 +173,8 @@ namespace BettyLang.Core
                 node = ParseCompoundStatement();
             else if (_currentToken.Type == TokenType.Identifier)
                 node = ParseAssignmentStatement();
+            else if (_currentToken.Type == TokenType.Print)
+                node = ParsePrintStatement();
             else
                 node = ParseEmptyStatement();
 

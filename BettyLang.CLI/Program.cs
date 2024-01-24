@@ -8,10 +8,12 @@ namespace BettyLang.CLI
         {
             try
             {
+                Console.Write("betty> ");
                 string input = """
                     main
                     {
-                        a = 2^5 < 3 && true;
+                        a = 10 + 2;
+                        print "Hello World " + a + "\n";
                     }
                     """;
                 var lexer = new Lexer(input);

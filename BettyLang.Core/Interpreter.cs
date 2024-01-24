@@ -153,6 +153,18 @@ namespace BettyLang.Core
                 throw new Exception($"Variable '{variableName}' is not defined.");
         }
 
+        public InterpreterResult Visit(PrintStatementNode node)
+        {
+            // Evaluate the expression contained in the print statement
+            var expressionResult = node.Expression.Accept(this);
+
+            // Perform the print action - e.g., writing to the console
+            Console.Write(expressionResult.Value);
+
+            // Return a null or empty result, since print doesn't typically have a return value
+            return new InterpreterResult(null);
+        }
+
         public InterpreterResult Visit(EmptyStatementNode node) => new InterpreterResult(null);
         public InterpreterResult Visit(FunctionDefinitionNode node)
         {
