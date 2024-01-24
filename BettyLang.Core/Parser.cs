@@ -195,9 +195,30 @@ namespace BettyLang.Core
             Consume(TokenType.LParen);
             var condition = ParseExpression();
             Consume(TokenType.RParen);
-            var body = ParseCompoundStatement();
-            return new IfStatementNode(condition, body);
+            var thenStatement = ParseCompoundStatement();
+
+            var elseIfStatements = new List<(ASTNode Condition, ASTNode Statement)>();
+            ASTNode elseStatement = null;
+
+            while (_currentToken.Type == TokenType.ElseIf)
+            {
+                Consume(TokenType.ElseIf);
+                Consume(TokenType.LParen);
+                var elseIfCondition = ParseExpression();
+                Consume(TokenType.RParen);
+                var elseIfStatement = ParseCompoundStatement();
+                elseIfStatements.Add((elseIfCondition, elseIfStatement));
+            }
+
+            if (_currentToken.Type == TokenType.Else)
+            {
+                Consume(TokenType.Else);
+                elseStatement = ParseCompoundStatement();
+            }
+
+            return new IfStatementNode(condition, thenStatement, elseIfStatements, elseStatement);
         }
+
 
         private ASTNode ParseStatement()
         {

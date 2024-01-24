@@ -15,7 +15,9 @@
             ["false"] = new Token(TokenType.FalseLiteral, "false"),
             ["print"] = new Token(TokenType.Print, "print"),
             ["input"] = new Token(TokenType.Input, "input"),
-            ["if"] = new Token(TokenType.If, "if")
+            ["if"] = new Token(TokenType.If, "if"),
+            ["elif"] = new Token(TokenType.ElseIf, "elif"),
+            ["else"] = new Token(TokenType.Else, "else")
         };
 
         private static readonly Dictionary<string, TokenType> _doubleCharOperators = new()

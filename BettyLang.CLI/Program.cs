@@ -12,15 +12,18 @@ namespace BettyLang.CLI
                 string input = """
                     main
                     {
-                        a = 10 + 2;
-                        print "Hello World " + a + "\n";
-                        if (true && 2 > 1) {
-                            a = 13;
-                            print "What's your name? "; // This is a comment
-                            input x;
+                        a = 10;
+                        if (a < 1) {
+                            a = 13; // This is a comment
                         }
-                        print a + "\n";
-                        print "Hi " + x;
+                        elif (a > 5)
+                        {
+                            print "Yo!";
+                        }
+                        else
+                        {
+                            print "Wow! You're here\n";
+                        }
                     }
                     """;
                 var lexer = new Lexer(input);

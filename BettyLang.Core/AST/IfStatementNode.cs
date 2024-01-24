@@ -2,13 +2,18 @@
 {
     public class IfStatementNode : ASTNode
     {
-        public ASTNode Condition { get; }
-        public CompoundStatementNode Body { get; }
+        public ASTNode Condition { get; private set; }
+        public ASTNode ThenStatement { get; private set; }
+        public List<(ASTNode Condition, ASTNode Statement)> ElseIfStatements { get; private set; }
+        public ASTNode ElseStatement { get; private set; }
 
-        public IfStatementNode(ASTNode condition, CompoundStatementNode body)
+        public IfStatementNode(ASTNode condition, ASTNode thenStatement,
+            List<(ASTNode Condition, ASTNode Statement)> elseIfStatements, ASTNode elseStatement)
         {
             Condition = condition;
-            Body = body;
+            ThenStatement = thenStatement;
+            ElseIfStatements = elseIfStatements ?? new List<(ASTNode Condition, ASTNode Statement)>();
+            ElseStatement = elseStatement;
         }
 
         public override InterpreterResult Accept(INodeVisitor visitor) => visitor.Visit(this);

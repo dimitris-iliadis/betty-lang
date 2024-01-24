@@ -49,28 +49,31 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(IfStatementNode node)
         {
-            var expression = node.Condition.Accept(this);
+            var conditionResult = node.Condition.Accept(this).AsBoolean();
 
-            if (expression.Value is bool condition)
+            if (conditionResult)
             {
-                if (condition)
-                {
-                    // Execute the 'then' part of the if statement
-                    node.Body.Accept(this);
-                }
-                else
-                {
-                    // Execute the 'else' part of the if statement, if it exists
-                }
+                return node.ThenStatement.Accept(this);
             }
             else
             {
-                throw new InvalidOperationException(
-                    $"The condition in an if statement must be a boolean expression, but was '{expression.Value!.GetType()}'.");
+                foreach (var (Condition, Statement) in node.ElseIfStatements)
+                {
+                    if (Condition.Accept(this).AsBoolean())
+                    {
+                        return Statement.Accept(this);
+                    }
+                }
+
+                if (node.ElseStatement != null)
+                {
+                    return node.ElseStatement.Accept(this);
+                }
             }
 
             return new InterpreterResult(null);
         }
+
 
         public InterpreterResult Visit(BinaryOperatorNode node)
         {

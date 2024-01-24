@@ -5,5 +5,7 @@
         public object? Value { get; }
 
         public InterpreterResult(object? value) { Value = value; }
+
+        public bool AsBoolean() => Convert.ToBoolean(Value);
     }
 }
