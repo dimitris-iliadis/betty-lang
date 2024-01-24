@@ -1,6 +1,4 @@
-﻿using BettyLang.Core.AST;
-
-namespace BettyLang.Core
+﻿namespace BettyLang.Core
 {
     public class Lexer
     {
@@ -119,9 +117,7 @@ namespace BettyLang.Core
                 '}' => (TokenType.RBracket, "}"),
                 ';' => (TokenType.Semicolon, ";"),
                 '!' => (TokenType.Not, "!"),
-                '&' => (TokenType.And, "&"),
                 '=' => (TokenType.Assign, "="),
-                '|' => (TokenType.Or, "|"),
                 _ => throw new Exception($"Invalid character '{_currentChar}' at position {_position}")
             };
 
@@ -181,7 +177,11 @@ namespace BettyLang.Core
             }
 
             if (_currentChar == '!' && PeekNextChar() == '=')
+            {
+                Advance();
+                Advance();
                 return new Token(TokenType.NotEqual, "!=");
+            }
 
             throw new Exception($"Invalid character '{_currentChar}' at position {_position}");
         }
@@ -216,6 +216,20 @@ namespace BettyLang.Core
 
                 if (_currentChar == '.' && Char.IsDigit(PeekNextChar()))
                     return new Token(TokenType.NumberLiteral, ScanNumberLiteral(hasLeadingDot: true));
+
+                if (_currentChar == '&' && PeekNextChar() == '&')
+                {
+                    Advance();
+                    Advance();
+                    return new Token(TokenType.And, "&&");
+                }
+
+                if (_currentChar == '|' && PeekNextChar() == '|')
+                {
+                    Advance();
+                    Advance();
+                    return new Token(TokenType.Or, "||");
+                }
 
                 if (_currentChar == '<' 
                     || _currentChar == '>' 

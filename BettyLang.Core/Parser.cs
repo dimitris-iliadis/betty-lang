@@ -93,7 +93,7 @@ namespace BettyLang.Core
             if (_currentToken.Type == TokenType.StringLiteral)
                 return ParseString();
 
-            var node = ParseExponentiation();
+            var node = ParseExponent();
 
             while (_currentToken.Type == TokenType.Mul || _currentToken.Type == TokenType.Div)
             {
@@ -103,13 +103,13 @@ namespace BettyLang.Core
                 else if (token.Type == TokenType.Div)
                     Consume(TokenType.Div);
 
-                node = new BinaryOperatorNode(node, token, ParseExponentiation());
+                node = new BinaryOperatorNode(node, token, ParseExponent());
             }
 
             return node;
         }
 
-        private ASTNode ParseExponentiation()
+        private ASTNode ParseExponent()
         {
             var node = ParseFactor();
 
@@ -117,28 +117,15 @@ namespace BettyLang.Core
             {
                 var token = _currentToken;
                 Consume(TokenType.Caret);
-                node = new BinaryOperatorNode(node, token, ParseExponentiation());
+                node = new BinaryOperatorNode(node, token, ParseExponent());
             }
 
             return node;
         }
 
-        private ASTNode ParseExpression()
+        public ASTNode ParseExpression()
         {
-            var node = ParseOrExpression();
-
-            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus)
-            {
-                var token = _currentToken;
-                if (token.Type == TokenType.Plus)
-                    Consume(TokenType.Plus);
-                else if (token.Type == TokenType.Minus)
-                    Consume(TokenType.Minus);
-
-                node = new BinaryOperatorNode(node, token, ParseTerm());
-            }
-
-            return node;
+            return ParseOrExpression();
         }
 
         private CompoundStatementNode ParseCompoundStatement()
@@ -270,13 +257,13 @@ namespace BettyLang.Core
 
         private ASTNode ParseComparisonExpression()
         {
-            var node = ParseTerm();
+            var node = ParseArithmeticExpression();
 
             while (IsComparisonOperator(_currentToken.Type))
             {
                 var token = _currentToken;
                 Consume(token.Type); // Consume the comparison operator
-                node = new BinaryOperatorNode(node, token, ParseTerm());
+                node = new BinaryOperatorNode(node, token, ParseArithmeticExpression());
             }
 
             return node;
@@ -319,6 +306,26 @@ namespace BettyLang.Core
 
             return node;
         }
+
+        private ASTNode ParseArithmeticExpression()
+        {
+            var node = ParseTerm();
+
+            while (_currentToken.Type == TokenType.Plus || _currentToken.Type == TokenType.Minus)
+            {
+                var token = _currentToken;
+                if (token.Type == TokenType.Plus)
+                    Consume(TokenType.Plus);
+                else if (token.Type == TokenType.Minus)
+                    Consume(TokenType.Minus);
+
+                node = new BinaryOperatorNode(node, token, ParseTerm());
+            }
+
+            return node;
+        }
+
+
 
         public ASTNode Parse()
         {

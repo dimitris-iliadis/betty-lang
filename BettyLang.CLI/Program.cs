@@ -11,7 +11,7 @@ namespace BettyLang.CLI
                 string input = """
                     main
                     {
-                        a = !(2 < (1 - 3)) & true; // This is a comment
+                        a = 1 < 3 && true || false;
                     }
                     """;
                 var lexer = new Lexer(input);
