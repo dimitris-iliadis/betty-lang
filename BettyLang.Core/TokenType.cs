@@ -12,7 +12,7 @@
 
         Main, Function,
 
-        Assign, Print,
+        Assign, Print, If,
         
         Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, NotEqual,
 

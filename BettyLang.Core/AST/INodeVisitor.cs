@@ -15,5 +15,6 @@
         InterpreterResult Visit(ParameterNode node);
         InterpreterResult Visit(BooleanLiteralNode node);
         InterpreterResult Visit(PrintStatementNode node);
+        InterpreterResult Visit(IfStatementNode node);
     }
 }

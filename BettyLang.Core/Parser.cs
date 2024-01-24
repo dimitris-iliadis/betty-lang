@@ -141,20 +141,30 @@ namespace BettyLang.Core
             return root;
         }
 
+        private bool RequiresSemicolon(ASTNode node)
+        {
+            return !(node is CompoundStatementNode
+                || node is IfStatementNode);
+        }
+
         private List<ASTNode> ParseStatementList()
         {
-            var node = ParseStatement();
+            var results = new List<ASTNode>();
 
-            var results = new List<ASTNode>() { node };
-
-            while (_currentToken.Type == TokenType.Semicolon)
+            while (_currentToken.Type != TokenType.RBracket && _currentToken.Type != TokenType.EOF)
             {
-                Consume(TokenType.Semicolon);
-                results.Add(ParseStatement());
-            }
+                var node = ParseStatement();
+                results.Add(node);
 
-            if (_currentToken.Type == TokenType.Identifier)
-                throw new Exception($"Unexpected token: {_currentToken.Type}");
+                if (RequiresSemicolon(node))
+                {
+                    // Expect a semicolon after simple statements
+                    if (_currentToken.Type == TokenType.Semicolon)
+                        Consume(TokenType.Semicolon);
+                    else
+                        throw new Exception($"Expected semicolon after statement, found '{_currentToken.Type}'");
+                }
+            }
 
             return results;
         }
@@ -166,6 +176,16 @@ namespace BettyLang.Core
             return new PrintStatementNode(expression);
         }
 
+        private ASTNode ParseIfStatement()
+        {
+            Consume(TokenType.If);
+            Consume(TokenType.LParen);
+            var condition = ParseExpression();
+            Consume(TokenType.RParen);
+            var body = ParseCompoundStatement();
+            return new IfStatementNode(condition, body);
+        }
+
         private ASTNode ParseStatement()
         {
             ASTNode node;
@@ -175,6 +195,8 @@ namespace BettyLang.Core
                 node = ParseAssignmentStatement();
             else if (_currentToken.Type == TokenType.Print)
                 node = ParsePrintStatement();
+            else if (_currentToken.Type == TokenType.If)
+                node = ParseIfStatement();
             else
                 node = ParseEmptyStatement();
 

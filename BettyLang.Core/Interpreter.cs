@@ -47,6 +47,31 @@ namespace BettyLang.Core
                 throw new Exception("Type mismatch or unsupported types for comparison.");
         }
 
+        public InterpreterResult Visit(IfStatementNode node)
+        {
+            var expression = node.Condition.Accept(this);
+
+            if (expression.Value is bool condition)
+            {
+                if (condition)
+                {
+                    // Execute the 'then' part of the if statement
+                    node.Body.Accept(this);
+                }
+                else
+                {
+                    // Execute the 'else' part of the if statement, if it exists
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"The condition in an if statement must be a boolean expression, but was '{expression.Value!.GetType()}'.");
+            }
+
+            return new InterpreterResult(null);
+        }
+
         public InterpreterResult Visit(BinaryOperatorNode node)
         {
             var leftResult = node.Left.Accept(this);
@@ -166,6 +191,7 @@ namespace BettyLang.Core
         }
 
         public InterpreterResult Visit(EmptyStatementNode node) => new InterpreterResult(null);
+
         public InterpreterResult Visit(FunctionDefinitionNode node)
         {
             throw new NotImplementedException();

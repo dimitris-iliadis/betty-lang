@@ -13,7 +13,8 @@
             ["function"] = new Token(TokenType.Function, "function"),
             ["true"] = new Token(TokenType.TrueLiteral, "true"),
             ["false"] = new Token(TokenType.FalseLiteral, "false"),
-            ["print"] = new Token(TokenType.Print, "print")
+            ["print"] = new Token(TokenType.Print, "print"),
+            ["if"] = new Token(TokenType.If, "if")
         };
 
         private static readonly Dictionary<string, TokenType> _doubleCharOperators = new()
