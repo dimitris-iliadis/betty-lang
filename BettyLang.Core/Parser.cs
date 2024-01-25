@@ -144,7 +144,8 @@ namespace BettyLang.Core
         private bool RequiresSemicolon(ASTNode node)
         {
             return !(node is CompoundStatementNode
-                || node is IfStatementNode);
+                || node is IfStatementNode
+                || node is WhileStatementNode);
         }
 
         private List<ASTNode> ParseStatementList()
@@ -200,9 +201,9 @@ namespace BettyLang.Core
             var elseIfStatements = new List<(ASTNode Condition, ASTNode Statement)>();
             ASTNode elseStatement = null;
 
-            while (_currentToken.Type == TokenType.ElseIf)
+            while (_currentToken.Type == TokenType.Elif)
             {
-                Consume(TokenType.ElseIf);
+                Consume(TokenType.Elif);
                 Consume(TokenType.LParen);
                 var elseIfCondition = ParseExpression();
                 Consume(TokenType.RParen);
@@ -219,6 +220,27 @@ namespace BettyLang.Core
             return new IfStatementNode(condition, thenStatement, elseIfStatements, elseStatement);
         }
 
+        private ASTNode ParseWhileStatement()
+        {
+            Consume(TokenType.While);
+            Consume(TokenType.LParen);
+            var condition = ParseExpression();
+            Consume(TokenType.RParen);
+            var body = ParseCompoundStatement();
+            return new WhileStatementNode(condition, body);
+        }
+
+        private ASTNode ParseBreakStatement()
+        {
+            Consume(TokenType.Break);
+            return new BreakStatementNode();
+        }
+
+        private ASTNode ParseContinueStatement()
+        {
+            Consume(TokenType.Continue);
+            return new ContinueStatementNode();
+        }
 
         private ASTNode ParseStatement()
         {
@@ -229,6 +251,9 @@ namespace BettyLang.Core
                 TokenType.Print => ParsePrintStatement(),
                 TokenType.Input => ParseInputStatement(),
                 TokenType.If => ParseIfStatement(),
+                TokenType.While => ParseWhileStatement(),
+                TokenType.Break => ParseBreakStatement(),
+                TokenType.Continue => ParseContinueStatement(),
                 _ => ParseEmptyStatement()
             };
 

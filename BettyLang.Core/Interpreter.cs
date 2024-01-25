@@ -2,6 +2,9 @@
 
 namespace BettyLang.Core
 {
+    public class BreakException : Exception { }
+    public class ContinueException : Exception { }
+
     public class Interpreter : INodeVisitor
     {
         private readonly Parser _parser;
@@ -45,6 +48,33 @@ namespace BettyLang.Core
             }
             else
                 throw new Exception("Type mismatch or unsupported types for comparison.");
+        }
+
+        public InterpreterResult Visit(BreakStatementNode node) => throw new BreakException();
+
+        public InterpreterResult Visit(ContinueStatementNode node) => throw new ContinueException();
+
+        public InterpreterResult Visit(WhileStatementNode node)
+        {
+            try
+            {
+                while (node.Condition.Accept(this).AsBoolean())
+                {
+                    try
+                    {
+                        node.Body.Accept(this);
+                    }
+                    catch (ContinueException)
+                    {
+                        continue;
+                    }
+                }
+            }
+            catch (BreakException)
+            {
+            }
+
+            return new InterpreterResult(null);
         }
 
         public InterpreterResult Visit(IfStatementNode node)

@@ -17,5 +17,8 @@
         InterpreterResult Visit(PrintStatementNode node);
         InterpreterResult Visit(InputStatementNode node);
         InterpreterResult Visit(IfStatementNode node);
+        InterpreterResult Visit(WhileStatementNode node);
+        InterpreterResult Visit(BreakStatementNode node);
+        InterpreterResult Visit(ContinueStatementNode node);
     }
 }

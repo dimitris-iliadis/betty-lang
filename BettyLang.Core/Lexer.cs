@@ -16,8 +16,11 @@
             ["print"] = new Token(TokenType.Print, "print"),
             ["input"] = new Token(TokenType.Input, "input"),
             ["if"] = new Token(TokenType.If, "if"),
-            ["elif"] = new Token(TokenType.ElseIf, "elif"),
-            ["else"] = new Token(TokenType.Else, "else")
+            ["elif"] = new Token(TokenType.Elif, "elif"),
+            ["else"] = new Token(TokenType.Else, "else"),
+            ["while"] = new Token(TokenType.While, "while"),
+            ["break"] = new Token(TokenType.Break, "break"),
+            ["continue"] = new Token(TokenType.Continue, "continue")
         };
 
         private static readonly Dictionary<string, TokenType> _doubleCharOperators = new()

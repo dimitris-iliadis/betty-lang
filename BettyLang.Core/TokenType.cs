@@ -12,7 +12,7 @@
 
         Main, Function,
 
-        Assign, Print, Input, If, ElseIf, Else,
+        Assign, Print, Input, If, Elif, Else, While, Break, Continue,
         
         Equal, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual, NotEqual,
 

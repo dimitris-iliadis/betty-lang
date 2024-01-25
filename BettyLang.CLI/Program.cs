@@ -8,21 +8,19 @@ namespace BettyLang.CLI
         {
             try
             {
-                Console.Write("betty> ");
                 string input = """
                     main
                     {
                         a = 10;
-                        if (a < 1) {
-                            a = 13; // This is a comment
-                        }
-                        elif (a > 5)
+                        while (a >= 1)
                         {
-                            print "Yo!";
-                        }
-                        else
-                        {
-                            print "Wow! You're here\n";
+                            print "Hehe\n";
+                            a = a - 1;
+                            if (a == 5)
+                            {
+                                print "Nah";
+                                break;
+                            }
                         }
                     }
                     """;
