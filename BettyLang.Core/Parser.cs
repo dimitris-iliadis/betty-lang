@@ -190,7 +190,9 @@ namespace BettyLang.Core
             Consume(TokenType.LParen);
             var condition = ParseExpression();
             Consume(TokenType.RParen);
-            var thenStatement = ParseCompoundStatement();
+
+            // Parse thenStatement as either a compound statement or a single statement
+            var thenStatement = (_currentToken.Type == TokenType.LBracket) ? ParseCompoundStatement() : ParseStatement();
 
             var elseIfStatements = new List<(ASTNode Condition, ASTNode Statement)>();
             ASTNode elseStatement = null;
@@ -201,14 +203,16 @@ namespace BettyLang.Core
                 Consume(TokenType.LParen);
                 var elseIfCondition = ParseExpression();
                 Consume(TokenType.RParen);
-                var elseIfStatement = ParseCompoundStatement();
+                // Parse elseIfStatement similarly
+                var elseIfStatement = (_currentToken.Type == TokenType.LBracket) ? ParseCompoundStatement() : ParseStatement();
                 elseIfStatements.Add((elseIfCondition, elseIfStatement));
             }
 
             if (_currentToken.Type == TokenType.Else)
             {
                 Consume(TokenType.Else);
-                elseStatement = ParseCompoundStatement();
+                // Parse elseStatement similarly
+                elseStatement = (_currentToken.Type == TokenType.LBracket) ? ParseCompoundStatement() : ParseStatement();
             }
 
             return new IfStatementNode(condition, thenStatement, elseIfStatements, elseStatement);
@@ -220,7 +224,7 @@ namespace BettyLang.Core
             Consume(TokenType.LParen);
             var condition = ParseExpression();
             Consume(TokenType.RParen);
-            var body = ParseCompoundStatement();
+            var body = (_currentToken.Type == TokenType.LBracket) ? ParseCompoundStatement() : ParseStatement();
             return new WhileStatementNode(condition, body);
         }
 
