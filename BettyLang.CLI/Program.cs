@@ -9,10 +9,10 @@ namespace BettyLang.CLI
             try
             {
                 string input = """
-                    function fib(n)
+                    function fact(n)
                     {
                         if (n == 1) { return 1; }
-                        return fib(n - 1) * n;
+                        return fact(n - 1) * n;
                     }
 
                     main
@@ -20,7 +20,7 @@ namespace BettyLang.CLI
                         n = 1;
                         while (n <= 6)
                         {
-                            print fib(n) + "\n";
+                            print fact(n) + "\n";
                             n = n + 1;
                         }
                     }
