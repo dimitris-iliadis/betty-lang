@@ -9,19 +9,15 @@ namespace BettyLang.CLI
             try
             {
                 string input = """
+                    function what(n)
+                    {
+                        n = n + 2;
+                        return n;
+                    }
+
                     main
                     {
-                        a = 10;
-                        while (a >= 1)
-                        {
-                            print "Hehe\n";
-                            a = a - 1;
-                            if (a == 5)
-                            {
-                                print "Nah";
-                                break;
-                            }
-                        }
+                        exit();
                     }
                     """;
                 var lexer = new Lexer(input);

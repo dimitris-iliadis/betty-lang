@@ -4,14 +4,40 @@ namespace BettyLang.Core
 {
     public class BreakException : Exception { }
     public class ContinueException : Exception { }
+    public class ReturnException : Exception
+    {
+        public InterpreterResult ReturnValue { get; }
+
+        public ReturnException(InterpreterResult returnValue)
+        {
+            ReturnValue = returnValue;
+        }
+    }
 
     public class Interpreter : INodeVisitor
     {
         private readonly Parser _parser;
 
-        private Dictionary<string, object> _globalScope = [];
+        private Dictionary<string, FunctionDefinitionNode> functions = new Dictionary<string, FunctionDefinitionNode>();
+        private Stack<Dictionary<string, object>> scopes = new Stack<Dictionary<string, object>>();
 
-        public Interpreter(Parser parser) { _parser = parser; }
+        public Interpreter(Parser parser)
+        {
+            _parser = parser;
+            EnterScope(); // Initialize the global scope
+        }
+
+        public InterpreterResult Visit(ReturnStatementNode node)
+        {
+            InterpreterResult returnValue = null;
+            if (node.ReturnValue != null)
+            {
+                returnValue = node.ReturnValue.Accept(this);
+            }
+
+            // Use the exception to carry the return value
+            throw new ReturnException(returnValue);
+        }
 
         private InterpreterResult PerformComparison(object leftValue, object rightValue, TokenType operatorType)
         {
@@ -194,7 +220,7 @@ namespace BettyLang.Core
             {
                 string variableName = variableNode.Value;
                 var rightResult = node.Right.Accept(this);
-                _globalScope[variableName] = rightResult.Value!;
+                AssignVariable(variableName, rightResult.Value!);
                 return new InterpreterResult(null);
             }
             else
@@ -204,33 +230,36 @@ namespace BettyLang.Core
         public InterpreterResult Visit(VariableNode node)
         {
             string variableName = node.Value;
-
-            if (_globalScope.TryGetValue(variableName, out var value))
-                return new InterpreterResult(value);
-            else
-                throw new Exception($"Variable '{variableName}' is not defined.");
+            return new InterpreterResult(LookupVariable(variableName));
         }
+
 
         public InterpreterResult Visit(InputStatementNode node)
         {
             // Read input from the user
             string userInput = Console.ReadLine() ?? string.Empty;
 
+            object value;
+
             // Try to parse the input as a double. If it fails, treat it as a string
             if (double.TryParse(userInput, out double numericValue))
             {
                 // Input is successfully parsed as a double
-                _globalScope[node.VariableName] = numericValue;
+                value = numericValue;
             }
             else
             {
                 // Input is treated as a string
-                _globalScope[node.VariableName] = userInput;
+                value = userInput;
             }
+
+            // Assign the value to the variable in the current scope
+            AssignVariable(node.VariableName, value);
 
             // Return a null or appropriate result
             return new InterpreterResult(null);
         }
+
 
         public InterpreterResult Visit(PrintStatementNode node)
         {
@@ -246,9 +275,53 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(EmptyStatementNode node) => new InterpreterResult(null);
 
+        public InterpreterResult Visit(FunctionCallNode node)
+        {
+            if (node.FunctionName == "exit")
+            {
+                Environment.Exit(0);
+            }
+
+            if (!functions.TryGetValue(node.FunctionName, out var function))
+            {
+                throw new Exception($"Function {node.FunctionName} is not defined.");
+            }
+
+            // Enter a new scope for function execution
+            EnterScope();
+
+            InterpreterResult returnValue = null;
+
+            try
+            {
+                // Set function parameters in the new scope
+                for (int i = 0; i < node.Arguments.Count; i++)
+                {
+                    var argValue = node.Arguments[i].Accept(this).Value;
+                    scopes.Peek()[function.Parameters[i].Name] = argValue;
+                }
+
+                // Execute function body
+                function.Body.Accept(this);
+            }
+            catch (ReturnException ex)
+            {
+                // Catch the return value from the function
+                returnValue = ex.ReturnValue;
+            }
+            finally
+            {
+                // Exit the function scope regardless of how we leave the function
+                ExitScope();
+            }
+
+            return returnValue ?? new InterpreterResult(null); // return null or default if no value was returned
+        }
+
         public InterpreterResult Visit(FunctionDefinitionNode node)
         {
-            throw new NotImplementedException();
+            functions[node.FunctionName] = node;
+            return new InterpreterResult(null);
         }
 
         public InterpreterResult Visit(ParameterNode node)
@@ -278,6 +351,34 @@ namespace BettyLang.Core
         {
             var tree = _parser.Parse();
             tree.Accept(this);
+        }
+
+        private void EnterScope()
+        {
+            scopes.Push(new Dictionary<string, object>());
+        }
+
+        private void ExitScope()
+        {
+            scopes.Pop();
+        }
+
+        private void AssignVariable(string name, object value)
+        {
+            var currentScope = scopes.Peek();
+            currentScope[name] = value;
+        }
+
+        private object LookupVariable(string name)
+        {
+            foreach (var scope in scopes)
+            {
+                if (scope.TryGetValue(name, out var value))
+                {
+                    return value;
+                }
+            }
+            throw new Exception($"Variable '{name}' not found in any scope");
         }
     }
 }

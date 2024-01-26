@@ -4,9 +4,9 @@
     {
         public string FunctionName { get; }
         public List<ParameterNode> Parameters { get; }
-        public CompoundStatementNode Body { get; }
+        public ASTNode Body { get; }
 
-        public FunctionDefinitionNode(string functionName, List<ParameterNode> parameters, CompoundStatementNode body)
+        public FunctionDefinitionNode(string functionName, List<ParameterNode> parameters, ASTNode body)
         {
             FunctionName = functionName;
             Parameters = parameters;

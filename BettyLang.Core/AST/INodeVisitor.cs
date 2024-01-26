@@ -12,6 +12,7 @@
         InterpreterResult Visit(EmptyStatementNode node);
         InterpreterResult Visit(ProgramNode node);
         InterpreterResult Visit(FunctionDefinitionNode node);
+        InterpreterResult Visit(FunctionCallNode node);
         InterpreterResult Visit(ParameterNode node);
         InterpreterResult Visit(BooleanLiteralNode node);
         InterpreterResult Visit(PrintStatementNode node);
@@ -20,5 +21,6 @@
         InterpreterResult Visit(WhileStatementNode node);
         InterpreterResult Visit(BreakStatementNode node);
         InterpreterResult Visit(ContinueStatementNode node);
+        InterpreterResult Visit(ReturnStatementNode node);
     }
 }

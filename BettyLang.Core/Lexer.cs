@@ -20,7 +20,8 @@
             ["else"] = new Token(TokenType.Else, "else"),
             ["while"] = new Token(TokenType.While, "while"),
             ["break"] = new Token(TokenType.Break, "break"),
-            ["continue"] = new Token(TokenType.Continue, "continue")
+            ["continue"] = new Token(TokenType.Continue, "continue"),
+            ["return"] = new Token(TokenType.Return, "return")
         };
 
         private static readonly Dictionary<string, TokenType> _doubleCharOperators = new()
@@ -139,6 +140,7 @@
                 '=' => (TokenType.Assign, "="),
                 '<' => (TokenType.LessThan, "<"),
                 '>' => (TokenType.GreaterThan, ">"),
+                ',' => (TokenType.Comma, ","),
                 _ => throw new Exception($"Invalid character '{_currentChar}' at position {_position}")
             };
 
@@ -170,6 +172,21 @@
         {
             while (_currentChar != '\0' && _currentChar != '\n')
                 Advance();
+        }
+
+        public Token PeekNextToken()
+        {
+            // Save the current state
+            var currentPosition = _position;
+            var currentChar = _currentChar;
+
+            var nextToken = GetNextToken();
+
+            // Restore the saved state
+            _position = currentPosition;
+            _currentChar = currentChar;
+
+            return nextToken;
         }
 
         public Token GetNextToken()

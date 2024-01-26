@@ -39,52 +39,49 @@ namespace BettyLang.Core
         {
             var token = _currentToken;
 
-            if (token.Type == TokenType.TrueLiteral)
+            switch (token.Type)
             {
-                Consume(TokenType.TrueLiteral);
-                var node = new BooleanLiteralNode(true);
-                return node;
-            }
-            else if (token.Type == TokenType.FalseLiteral)
-            {
-                Consume(TokenType.FalseLiteral);
-                var node = new BooleanLiteralNode(false);
-                return node;
-            }
-            else if (token.Type == TokenType.Plus)
-            {
-                Consume(TokenType.Plus);
-                var node = new UnaryOperatorNode(token, ParseFactor());
-                return node;
-            }
-            else if (token.Type == TokenType.Minus)
-            {
-                Consume(TokenType.Minus);
-                var node = new UnaryOperatorNode(token, ParseFactor());
-                return node;
-            }
-            else if (token.Type == TokenType.Not)
-            {
-                Consume(TokenType.Not);
-                var node = new UnaryOperatorNode(token, ParseFactor());
-                return node;
-            }
-            else if (token.Type == TokenType.NumberLiteral)
-            {
-                Consume(TokenType.NumberLiteral);
-                return new NumberLiteralNode(token);
-            }
-            else if (token.Type == TokenType.LParen)
-            {
-                Consume(TokenType.LParen);
-                var node = ParseExpression();
-                Consume(TokenType.RParen);
-                return node;
-            }
-            else
-            {
-                var node = ParseVariable();
-                return node;
+                case TokenType.TrueLiteral:
+                    Consume(TokenType.TrueLiteral);
+                    return new BooleanLiteralNode(true);
+
+                case TokenType.FalseLiteral:
+                    Consume(TokenType.FalseLiteral);
+                    return new BooleanLiteralNode(false);
+
+                case TokenType.Plus:
+                case TokenType.Minus:
+                case TokenType.Not:
+                    Consume(token.Type);
+                    return new UnaryOperatorNode(token, ParseFactor());
+
+                case TokenType.NumberLiteral:
+                    Consume(TokenType.NumberLiteral);
+                    return new NumberLiteralNode(token);
+
+                case TokenType.LParen:
+                    Consume(TokenType.LParen);
+                    var node = ParseExpression();
+                    Consume(TokenType.RParen);
+                    return node;
+
+                case TokenType.Identifier:
+                    // Peek at the next token to distinguish between variable and function call
+                    var lookahead = _lexer.PeekNextToken();
+                    if (lookahead.Type == TokenType.LParen)
+                    {
+                        // Function call
+                        return ParseFunctionCall();
+                    }
+                    else
+                    {
+                        // Variable
+                        Consume(TokenType.Identifier);
+                        return new VariableNode(token);
+                    }
+
+                default:
+                    throw new Exception($"Unexpected token: {token.Type}");
             }
         }
 
@@ -123,10 +120,7 @@ namespace BettyLang.Core
             return node;
         }
 
-        public ASTNode ParseExpression()
-        {
-            return ParseOrExpression();
-        }
+        public ASTNode ParseExpression() => ParseOrExpression();
 
         private CompoundStatementNode ParseCompoundStatement()
         {
@@ -242,18 +236,52 @@ namespace BettyLang.Core
             return new ContinueStatementNode();
         }
 
+        private ASTNode ParseReturnStatement()
+        {
+            Consume(TokenType.Return);
+
+            ASTNode returnValue = null;
+
+            // Check if the next token is not a statement terminator (like a semicolon)
+            if (_currentToken.Type != TokenType.Semicolon)
+            {
+                returnValue = ParseExpression();
+            }
+
+            return new ReturnStatementNode(returnValue);
+        }
+
         private ASTNode ParseStatement()
         {
+            if (_currentToken.Type == TokenType.Identifier)
+            {
+                // Peek at the next token to distinguish between assignment and function call
+                var lookahead = _lexer.PeekNextToken();
+
+                if (lookahead.Type == TokenType.Assign)
+                {
+                    // Assignment statement
+                    return ParseAssignmentStatement();
+                }
+                else if (lookahead.Type == TokenType.LParen)
+                {
+                    // Function call
+                    var functionCall = ParseFunctionCall();
+
+                    return functionCall;
+                }
+            }
+
             var node = _currentToken.Type switch
             {
                 TokenType.LBracket => ParseCompoundStatement(),
-                TokenType.Identifier => ParseAssignmentStatement(),
                 TokenType.Print => ParsePrintStatement(),
                 TokenType.Input => ParseInputStatement(),
                 TokenType.If => ParseIfStatement(),
                 TokenType.While => ParseWhileStatement(),
                 TokenType.Break => ParseBreakStatement(),
                 TokenType.Continue => ParseContinueStatement(),
+                TokenType.Return => ParseReturnStatement(),
                 _ => ParseEmptyStatement()
             };
 
@@ -271,6 +299,33 @@ namespace BettyLang.Core
         }
         private ASTNode ParseEmptyStatement() => new EmptyStatementNode();
 
+        private ASTNode ParseFunctionCall()
+        {
+            // The current token is expected to be an identifier (the function name)
+            string functionName = _currentToken.Value;
+            Consume(TokenType.Identifier);
+
+            // Consume the opening parenthesis
+            Consume(TokenType.LParen);
+
+            // Parse the arguments
+            var arguments = new List<ASTNode>();
+            if (_currentToken.Type != TokenType.RParen) // Check if the next token is not a right parenthesis
+            {
+                do
+                {
+                    arguments.Add(ParseExpression());
+                }
+                while (_currentToken.Type == TokenType.Comma); // Continue if there's a comma (more arguments)
+            }
+
+            // Consume the closing parenthesis
+            Consume(TokenType.RParen);
+
+            // Return a new function call node
+            return new FunctionCallNode(functionName, arguments);
+        }
+
         private FunctionDefinitionNode ParseFunctionDefinition()
         {
             // Assuming "function" token is already consumed
@@ -281,7 +336,7 @@ namespace BettyLang.Core
             List<ParameterNode> parameters = ParseParameters();
             Consume(TokenType.RParen); // Closing parenthesis
 
-            CompoundStatementNode body = ParseCompoundStatement(); // Function body
+            var body = ParseCompoundStatement(); // Function body
 
             return new FunctionDefinitionNode(functionName, parameters, body);
         }
@@ -412,8 +467,6 @@ namespace BettyLang.Core
 
             return node;
         }
-
-
 
         public ASTNode Parse()
         {
