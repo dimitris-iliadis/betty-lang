@@ -149,7 +149,6 @@ namespace BettyLang.Core
             return new InterpreterResult(null);
         }
 
-
         public InterpreterResult Visit(BinaryOperatorNode node)
         {
             var leftResult = node.Left.Accept(this);
@@ -326,16 +325,6 @@ namespace BettyLang.Core
 
                 // Execute function body
                 function.Body.Accept(this);
-            }
-            catch (ContinueException)
-            {
-                // Rethrow the exception if we're not in a function's loop context
-                throw new InvalidOperationException("Continue statement not inside a loop");
-            }
-            catch (BreakException)
-            {
-                // Rethrow the exception if we're not in a function's loop context
-                throw new InvalidOperationException("Break statement not inside a loop");
             }
             catch (ReturnException ex)
             {

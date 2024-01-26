@@ -8,9 +8,21 @@ namespace BettyLang.CLI
         {
             try
             {
-                string source = args.Length > 0 && !string.IsNullOrEmpty(args[0])
-                ? args[0]
-                : throw new ArgumentException("No script file specified.");
+                string source = """
+                    function myfunc()
+                    {
+                        print 5;
+                        continue;
+                    }
+
+                    main
+                    {
+                        break;
+
+                         while (true)
+                            myfunc();
+                    }
+                    """;
 
                 var lexer = new Lexer(source);
                 var parser = new Parser(lexer);
@@ -19,6 +31,7 @@ namespace BettyLang.CLI
             }
             catch (Exception ex)
             {
+                Console.WriteLine();
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
