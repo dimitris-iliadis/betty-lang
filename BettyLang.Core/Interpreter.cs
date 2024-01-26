@@ -21,6 +21,8 @@ namespace BettyLang.Core
         private Dictionary<string, FunctionDefinitionNode> functions = new Dictionary<string, FunctionDefinitionNode>();
         private Stack<Dictionary<string, object>> scopes = new Stack<Dictionary<string, object>>();
 
+        private bool isInLoop = false;
+
         public Interpreter(Parser parser)
         {
             _parser = parser;
@@ -76,12 +78,30 @@ namespace BettyLang.Core
                 throw new Exception("Type mismatch or unsupported types for comparison.");
         }
 
-        public InterpreterResult Visit(BreakStatementNode node) => throw new BreakException();
+        public InterpreterResult Visit(BreakStatementNode node)
+        {
+            if (!isInLoop)
+            {
+                throw new Exception("Break statement not inside a loop");
+            }
 
-        public InterpreterResult Visit(ContinueStatementNode node) => throw new ContinueException();
+            throw new BreakException();
+        }
+
+        public InterpreterResult Visit(ContinueStatementNode node)
+        {
+            if (!isInLoop)
+            {
+                throw new Exception("Continue statement not inside a loop");
+            }
+
+            throw new ContinueException();
+        }
 
         public InterpreterResult Visit(WhileStatementNode node)
         {
+            isInLoop = true;
+
             try
             {
                 while (node.Condition.Accept(this).AsBoolean())
@@ -96,9 +116,8 @@ namespace BettyLang.Core
                     }
                 }
             }
-            catch (BreakException)
-            {
-            }
+            catch (BreakException) { }
+            finally { isInLoop = false; }
 
             return new InterpreterResult(null);
         }
@@ -292,6 +311,10 @@ namespace BettyLang.Core
 
             InterpreterResult returnValue = null;
 
+            // Store the current loop context
+            bool wasInLoop = isInLoop;
+            isInLoop = false; // Reset isInLoop because we're entering a new function context
+
             try
             {
                 // Set function parameters in the new scope
@@ -304,6 +327,16 @@ namespace BettyLang.Core
                 // Execute function body
                 function.Body.Accept(this);
             }
+            catch (ContinueException)
+            {
+                // Rethrow the exception if we're not in a function's loop context
+                throw new InvalidOperationException("Continue statement not inside a loop");
+            }
+            catch (BreakException)
+            {
+                // Rethrow the exception if we're not in a function's loop context
+                throw new InvalidOperationException("Break statement not inside a loop");
+            }
             catch (ReturnException ex)
             {
                 // Catch the return value from the function
@@ -311,6 +344,9 @@ namespace BettyLang.Core
             }
             finally
             {
+                // Restore the loop context after function execution
+                isInLoop = wasInLoop;
+
                 // Exit the function scope regardless of how we leave the function
                 ExitScope();
             }

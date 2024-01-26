@@ -8,24 +8,11 @@ namespace BettyLang.CLI
         {
             try
             {
-                string input = """
-                    function fact(n)
-                    {
-                        if (n == 1) { return 1; }
-                        return fact(n - 1) * n;
-                    }
+                string source = args.Length > 0 && !string.IsNullOrEmpty(args[0])
+                ? args[0]
+                : throw new ArgumentException("No script file specified.");
 
-                    main
-                    {
-                        n = 1;
-                        while (n <= 6)
-                        {
-                            print fact(n) + "\n";
-                            n = n + 1;
-                        }
-                    }
-                    """;
-                var lexer = new Lexer(input);
+                var lexer = new Lexer(source);
                 var parser = new Parser(lexer);
                 var interpreter = new Interpreter(parser);
                 interpreter.Interpret();
