@@ -294,33 +294,24 @@ namespace BettyLang.Core
         private InterpreterResult HandleInputFunction(FunctionCallNode node)
         {
             // Check for correct number of arguments
-            if (node.Arguments.Count != 1 || node.Arguments[0] is not VariableNode variableNode)
+            if (node.Arguments.Count > 1)
             {
-                throw new Exception("Input function requires exactly one argument, which must be a variable name.");
+                throw new Exception("Input function requires at most one argument, which can be a prompt string.");
+            }
+
+            // If an argument is provided, display it as a prompt
+            if (node.Arguments.Count == 1)
+            {
+                Console.Write(node.Arguments[0].Accept(this).Value);
             }
 
             // Read input from the user
             string userInput = Console.ReadLine() ?? string.Empty;
 
-            object value;
-
             // Try to parse the input as a double. If it fails, treat it as a string
-            if (double.TryParse(userInput, out double numericValue))
-            {
-                // Input is successfully parsed as a double
-                value = numericValue;
-            }
-            else
-            {
-                // Input is treated as a string
-                value = userInput;
-            }
+            object value = double.TryParse(userInput, out double numericValue) ? numericValue : userInput;
 
-            // Assign the value to the variable in the current scope
-            AssignVariable(variableNode.Value, value);
-
-            // Return null as the Input function does not have a direct return value
-            return new InterpreterResult(null);
+            return new InterpreterResult(value);
         }
 
         private InterpreterResult HandlePrintFunction(FunctionCallNode node)
