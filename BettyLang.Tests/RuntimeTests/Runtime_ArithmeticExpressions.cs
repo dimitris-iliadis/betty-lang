@@ -1,5 +1,3 @@
-using BettyLang.Tests.TestUtilities;
-
 namespace BettyLang.Tests.RuntimeTests
 {
     public class ArithmeticExpressionsTests : InterpreterTestBase

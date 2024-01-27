@@ -13,8 +13,6 @@
             ["function"] = new Token(TokenType.Function, "function"),
             ["true"] = new Token(TokenType.TrueLiteral, "true"),
             ["false"] = new Token(TokenType.FalseLiteral, "false"),
-            ["print"] = new Token(TokenType.Print, "print"),
-            ["input"] = new Token(TokenType.Input, "input"),
             ["if"] = new Token(TokenType.If, "if"),
             ["elif"] = new Token(TokenType.Elif, "elif"),
             ["else"] = new Token(TokenType.Else, "else"),

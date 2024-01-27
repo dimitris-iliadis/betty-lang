@@ -164,26 +164,6 @@ namespace BettyLang.Core
             return results;
         }
 
-        private ASTNode ParseInputStatement()
-        {
-            Consume(TokenType.Input);
-
-            if (_currentToken.Type != TokenType.Identifier)
-                throw new Exception("Expected variable name after 'input'");
-
-            string variableName = _currentToken.Value.ToString();
-            Consume(TokenType.Identifier);
-
-            return new InputStatementNode(variableName);
-        }
-
-        private ASTNode ParsePrintStatement()
-        {
-            Consume(TokenType.Print);
-            ASTNode expression = ParseExpression();
-            return new PrintStatementNode(expression);
-        }
-
         private ASTNode ParseIfStatement()
         {
             Consume(TokenType.If);
@@ -279,8 +259,6 @@ namespace BettyLang.Core
             var node = _currentToken.Type switch
             {
                 TokenType.LBracket => ParseCompoundStatement(),
-                TokenType.Print => ParsePrintStatement(),
-                TokenType.Input => ParseInputStatement(),
                 TokenType.If => ParseIfStatement(),
                 TokenType.While => ParseWhileStatement(),
                 TokenType.Break => ParseBreakStatement(),
@@ -318,6 +296,9 @@ namespace BettyLang.Core
             {
                 do
                 {
+                    if (_currentToken.Type == TokenType.Comma)
+                        Consume(TokenType.Comma); // Consume the comma before parsing the next argument
+
                     arguments.Add(ParseExpression());
                 }
                 while (_currentToken.Type == TokenType.Comma); // Continue if there's a comma (more arguments)

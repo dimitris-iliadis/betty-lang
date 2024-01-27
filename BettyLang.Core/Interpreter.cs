@@ -21,6 +21,24 @@ namespace BettyLang.Core
         private readonly Dictionary<string, FunctionDefinitionNode> _functions = new();
         private readonly Stack<Dictionary<string, object>> _scopes = new();
 
+        private static readonly Dictionary<string, Func<double, double>> _mathFunctions = new Dictionary<string, Func<double, double>>
+        {
+            {"sin", Math.Sin},
+            {"cos", Math.Cos},
+            {"tan", Math.Tan},
+            {"sqrt", Math.Sqrt}
+        };
+
+        private static readonly HashSet<string> _builtInFunctionNames = new HashSet<string>
+        {
+            "print",
+            "input",
+            "sin",
+            "cos",
+            "tan",
+            "sqrt"
+        };
+
         private bool _isInLoop = false;
 
         public Interpreter(Parser parser)
@@ -251,9 +269,36 @@ namespace BettyLang.Core
             return new InterpreterResult(LookupVariable(variableName));
         }
 
+        public InterpreterResult Visit(EmptyStatementNode node) => new InterpreterResult(null);
 
-        public InterpreterResult Visit(InputStatementNode node)
+        private InterpreterResult HandleBuiltInFunction(FunctionCallNode node)
         {
+            if (node.FunctionName == "print")
+            {
+                return HandlePrintFunction(node);
+            }
+            else if (node.FunctionName == "input")
+            {
+                return HandleInputFunction(node);
+            }
+            else if (_mathFunctions.TryGetValue(node.FunctionName, out var func))
+            {
+                return HandleMathFunction(node, func);
+            }
+            else
+            {
+                throw new Exception($"Unknown built-in function {node.FunctionName}");
+            }
+        }
+
+        private InterpreterResult HandleInputFunction(FunctionCallNode node)
+        {
+            // Check for correct number of arguments
+            if (node.Arguments.Count != 1 || node.Arguments[0] is not VariableNode variableNode)
+            {
+                throw new Exception("Input function requires exactly one argument, which must be a variable name.");
+            }
+
             // Read input from the user
             string userInput = Console.ReadLine() ?? string.Empty;
 
@@ -272,33 +317,44 @@ namespace BettyLang.Core
             }
 
             // Assign the value to the variable in the current scope
-            AssignVariable(node.VariableName, value);
+            AssignVariable(variableNode.Value, value);
 
-            // Return a null or appropriate result
+            // Return null as the Input function does not have a direct return value
             return new InterpreterResult(null);
         }
 
-
-        public InterpreterResult Visit(PrintStatementNode node)
+        private InterpreterResult HandlePrintFunction(FunctionCallNode node)
         {
-            // Evaluate the expression contained in the print statement
-            var expressionResult = node.Expression.Accept(this);
-
-            // Perform the print action - e.g., writing to the console
-            Console.Write(expressionResult.Value);
-
-            // Return a null or empty result, since print doesn't typically have a return value
+            // Loop through arguments, evaluate them, and print their values
+            foreach (var arg in node.Arguments)
+            {
+                var argResult = arg.Accept(this);
+                Console.Write(argResult.Value);
+            }
             return new InterpreterResult(null);
         }
 
-        public InterpreterResult Visit(EmptyStatementNode node) => new InterpreterResult(null);
+        private InterpreterResult HandleMathFunction(FunctionCallNode node, Func<double, double> func)
+        {
+            if (node.Arguments.Count != 1)
+                throw new Exception($"{node.FunctionName}() takes exactly one argument");
+
+            if (!(node.Arguments[0].Accept(this).Value is double))
+                throw new Exception($"{node.FunctionName}() must be called with a numeric argument");
+
+            var argValue = node.Arguments[0].Accept(this).AsDouble();
+            return new InterpreterResult(func(argValue));
+        }
+
+        private bool IsBuiltInFunction(string functionName) => _builtInFunctionNames.Contains(functionName);
 
         public InterpreterResult Visit(FunctionCallNode node)
         {
+            if (IsBuiltInFunction(node.FunctionName))
+                return HandleBuiltInFunction(node);
+
             if (!_functions.TryGetValue(node.FunctionName, out var function))
-            {
                 throw new Exception($"Function {node.FunctionName} is not defined.");
-            }
 
             // Enter a new scope for function execution
             EnterScope();
@@ -340,6 +396,9 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(FunctionDefinitionNode node)
         {
+            if (IsBuiltInFunction(node.FunctionName))
+                throw new Exception($"Function name '{node.FunctionName}' is reserved for built-in functions.");
+
             _functions[node.FunctionName] = node;
             return new InterpreterResult(null);
         }
