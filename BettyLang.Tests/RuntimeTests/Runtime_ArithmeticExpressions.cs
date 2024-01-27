@@ -93,5 +93,125 @@ namespace BettyLang.Tests.RuntimeTests
             var result = interpreter.Interpret();
             Assert.Equal(4.0, result.AsDouble());
         }
+
+        [Fact]
+        public void DivisionByZero_IsPositiveInfinity()
+        {
+            var code = "return 10 / 0;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(double.PositiveInfinity, result.AsDouble());
+        }
+
+        [Fact]
+        public void DeeplyNestedExpressions_EvaluatesCorrectly()
+        {
+            var code = "return (((((1 + 2) * 3) - 4) / 5) ^ 2);";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(Math.Pow(((1 + 2) * 3 - 4) / 5.0, 2), result.AsDouble());
+        }
+
+        [Fact]
+        public void NegativeExponentiation_ReturnsCorrectValue()
+        {
+            var code = "return 2 ^ -3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(1.0 / 8, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryPlusOperator_DoesNotChangeSign()
+        {
+            var code = "return +5;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(5.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryMinusOperator_NegatesValue()
+        {
+            var code = "return -5;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(-5.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void NestedUnaryOperators_EvaluatesCorrectly()
+        {
+            var code = "return -(-5);";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(5.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryMinusOperator_HasHigherPrecedenceThanPowerOperator()
+        {
+            var code = "return -2 ^ 3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(-8.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryMinusOperator_HasLowerPrecedenceThanMultiplicationOperator()
+        {
+            var code = "return -2 * 3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(-6.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryMinusOperator_HasLowerPrecedenceThanDivisionOperator()
+        {
+            var code = "return -6 / 3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(-2.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryMinusOperator_HasLowerPrecedenceThanAdditionOperator()
+        {
+            var code = "return -2 + 3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(1.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryMinusOperator_HasLowerPrecedenceThanSubtractionOperator()
+        {
+            var code = "return -2 - 3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(-5.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void UnaryMinusOperator_HasHigherPrecedenceThanParentheses()
+        {
+            var code = "return -(2 + 3);";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(-5.0, result.AsDouble());
+        }
     }
 }
