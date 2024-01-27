@@ -18,10 +18,10 @@ namespace BettyLang.Core
     {
         private readonly Parser _parser;
 
-        private Dictionary<string, FunctionDefinitionNode> functions = new Dictionary<string, FunctionDefinitionNode>();
-        private Stack<Dictionary<string, object>> scopes = new Stack<Dictionary<string, object>>();
+        private readonly Dictionary<string, FunctionDefinitionNode> _functions = new();
+        private readonly Stack<Dictionary<string, object>> _scopes = new();
 
-        private bool isInLoop = false;
+        private bool _isInLoop = false;
 
         public Interpreter(Parser parser)
         {
@@ -80,7 +80,7 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(BreakStatementNode node)
         {
-            if (!isInLoop)
+            if (!_isInLoop)
             {
                 throw new Exception("Break statement not inside a loop");
             }
@@ -90,7 +90,7 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(ContinueStatementNode node)
         {
-            if (!isInLoop)
+            if (!_isInLoop)
             {
                 throw new Exception("Continue statement not inside a loop");
             }
@@ -100,7 +100,7 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(WhileStatementNode node)
         {
-            isInLoop = true;
+            _isInLoop = true;
 
             try
             {
@@ -117,7 +117,7 @@ namespace BettyLang.Core
                 }
             }
             catch (BreakException) { }
-            finally { isInLoop = false; }
+            finally { _isInLoop = false; }
 
             return new InterpreterResult(null);
         }
@@ -295,12 +295,7 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(FunctionCallNode node)
         {
-            if (node.FunctionName == "exit")
-            {
-                Environment.Exit(0);
-            }
-
-            if (!functions.TryGetValue(node.FunctionName, out var function))
+            if (!_functions.TryGetValue(node.FunctionName, out var function))
             {
                 throw new Exception($"Function {node.FunctionName} is not defined.");
             }
@@ -311,8 +306,8 @@ namespace BettyLang.Core
             InterpreterResult returnValue = null;
 
             // Store the current loop context
-            bool wasInLoop = isInLoop;
-            isInLoop = false; // Reset isInLoop because we're entering a new function context
+            bool wasInLoop = _isInLoop;
+            _isInLoop = false; // Reset isInLoop because we're entering a new function context
 
             try
             {
@@ -320,7 +315,7 @@ namespace BettyLang.Core
                 for (int i = 0; i < node.Arguments.Count; i++)
                 {
                     var argValue = node.Arguments[i].Accept(this).Value;
-                    scopes.Peek()[function.Parameters[i].Name] = argValue;
+                    _scopes.Peek()[function.Parameters[i].Name] = argValue;
                 }
 
                 // Execute function body
@@ -334,7 +329,7 @@ namespace BettyLang.Core
             finally
             {
                 // Restore the loop context after function execution
-                isInLoop = wasInLoop;
+                _isInLoop = wasInLoop;
 
                 // Exit the function scope regardless of how we leave the function
                 ExitScope();
@@ -345,7 +340,7 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(FunctionDefinitionNode node)
         {
-            functions[node.FunctionName] = node;
+            _functions[node.FunctionName] = node;
             return new InterpreterResult(null);
         }
 
@@ -372,31 +367,40 @@ namespace BettyLang.Core
             throw new InvalidOperationException($"Unsupported unary operator {op}");
         }
 
-        public void Interpret()
+        public InterpreterResult Interpret()
         {
             var tree = _parser.Parse();
-            tree.Accept(this);
+            try
+            {
+                tree.Accept(this);
+            }
+            catch (ReturnException ex)
+            {
+                return ex.ReturnValue;
+            }
+
+            return new InterpreterResult(null);
         }
 
         private void EnterScope()
         {
-            scopes.Push(new Dictionary<string, object>());
+            _scopes.Push(new Dictionary<string, object>());
         }
 
         private void ExitScope()
         {
-            scopes.Pop();
+            _scopes.Pop();
         }
 
         private void AssignVariable(string name, object value)
         {
-            var currentScope = scopes.Peek();
+            var currentScope = _scopes.Peek();
             currentScope[name] = value;
         }
 
         private object LookupVariable(string name)
         {
-            foreach (var scope in scopes)
+            foreach (var scope in _scopes)
             {
                 if (scope.TryGetValue(name, out var value))
                 {
