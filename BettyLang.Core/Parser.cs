@@ -152,13 +152,6 @@ namespace BettyLang.Core
             return root;
         }
 
-        private bool RequiresSemicolon(ASTNode node)
-        {
-            return !(node is CompoundStatementNode
-                || node is IfStatementNode
-                || node is WhileStatementNode);
-        }
-
         private List<ASTNode> ParseStatementList()
         {
             var results = new List<ASTNode>();
@@ -167,15 +160,6 @@ namespace BettyLang.Core
             {
                 var node = ParseStatement();
                 results.Add(node);
-
-                if (RequiresSemicolon(node))
-                {
-                    // Expect a semicolon after simple statements
-                    if (_currentToken.Type == TokenType.Semicolon)
-                        Consume(TokenType.Semicolon);
-                    else
-                        throw new Exception($"Expected semicolon after statement, found '{_currentToken.Type}'");
-                }
             }
 
             return results;
@@ -228,52 +212,40 @@ namespace BettyLang.Core
         private ASTNode ParseBreakStatement()
         {
             Consume(TokenType.Break);
+            Consume(TokenType.Semicolon);
             return new BreakStatementNode();
         }
 
         private ASTNode ParseContinueStatement()
         {
             Consume(TokenType.Continue);
+            Consume(TokenType.Semicolon); // Consume semicolon here
             return new ContinueStatementNode();
         }
 
         private ASTNode ParseReturnStatement()
         {
             Consume(TokenType.Return);
-
             ASTNode returnValue = null;
-
-            // Check if the next token is not a statement terminator (like a semicolon)
             if (_currentToken.Type != TokenType.Semicolon)
             {
                 returnValue = ParseExpression();
             }
-
+            Consume(TokenType.Semicolon);
             return new ReturnStatementNode(returnValue);
         }
 
+        private ASTNode ParseFunctionCallStatement()
+        {
+            var functionCallNode = ParseFunctionCall() as FunctionCallNode;
+            Consume(TokenType.Semicolon);
+            return functionCallNode;
+        }
+
+
         private ASTNode ParseStatement()
         {
-            if (_currentToken.Type == TokenType.Identifier)
-            {
-                // Peek at the next token to distinguish between assignment and function call
-                var lookahead = _lexer.PeekNextToken();
-
-                if (lookahead.Type == TokenType.Assign)
-                {
-                    // Assignment statement
-                    return ParseAssignmentStatement();
-                }
-                else if (lookahead.Type == TokenType.LParen)
-                {
-                    // Function call
-                    var functionCall = ParseFunctionCall();
-
-                    return functionCall;
-                }
-            }
-
-            var node = _currentToken.Type switch
+            return _currentToken.Type switch
             {
                 TokenType.LBracket => ParseCompoundStatement(),
                 TokenType.If => ParseIfStatement(),
@@ -281,11 +253,28 @@ namespace BettyLang.Core
                 TokenType.Break => ParseBreakStatement(),
                 TokenType.Continue => ParseContinueStatement(),
                 TokenType.Return => ParseReturnStatement(),
+                TokenType.Identifier => ParseIdentifierStatement(),
                 _ => ParseEmptyStatement()
             };
-
-            return node;
         }
+
+        private ASTNode ParseIdentifierStatement()
+        {
+            var lookahead = _lexer.PeekNextToken();
+            if (lookahead.Type == TokenType.Assign)
+            {
+                return ParseAssignmentStatement();
+            }
+            else if (lookahead.Type == TokenType.LParen)
+            {
+                return ParseFunctionCallStatement();
+            }
+            else
+            {
+                throw new Exception($"Unexpected token after identifier: {lookahead.Type}");
+            }
+        }
+
 
         private ASTNode ParseAssignmentStatement()
         {
@@ -293,9 +282,10 @@ namespace BettyLang.Core
             var token = _currentToken;
             Consume(TokenType.Assign);
             var right = ParseExpression();
-            var node = new AssignmentNode(left, token, right);
-            return node;
+            Consume(TokenType.Semicolon);
+            return new AssignmentNode(left, token, right);
         }
+
         private ASTNode ParseEmptyStatement() => new EmptyStatementNode();
 
         private ASTNode ParseFunctionCall()
