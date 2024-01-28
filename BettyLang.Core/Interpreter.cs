@@ -32,7 +32,9 @@ namespace BettyLang.Core
         private static readonly HashSet<string> _builtInFunctionNames = new HashSet<string>
         {
             "print",
+            "println",
             "input",
+
             "sin",
             "cos",
             "tan",
@@ -275,7 +277,11 @@ namespace BettyLang.Core
         {
             if (node.FunctionName == "print")
             {
-                return HandlePrintFunction(node);
+                return HandlePrintFunction(node, addNewLine: false);
+            }
+            else if (node.FunctionName == "println")
+            {
+                return HandlePrintFunction(node, addNewLine: true);
             }
             else if (node.FunctionName == "input")
             {
@@ -295,15 +301,11 @@ namespace BettyLang.Core
         {
             // Check for correct number of arguments
             if (node.Arguments.Count > 1)
-            {
                 throw new Exception("Input function requires at most one argument, which can be a prompt string.");
-            }
 
             // If an argument is provided, display it as a prompt
             if (node.Arguments.Count == 1)
-            {
                 Console.Write(node.Arguments[0].Accept(this).Value);
-            }
 
             // Read input from the user
             string userInput = Console.ReadLine() ?? string.Empty;
@@ -314,16 +316,30 @@ namespace BettyLang.Core
             return new InterpreterResult(value);
         }
 
-        private InterpreterResult HandlePrintFunction(FunctionCallNode node)
+        private InterpreterResult HandlePrintFunction(FunctionCallNode node, bool addNewLine)
         {
-            // Loop through arguments, evaluate them, and print their values
-            foreach (var arg in node.Arguments)
+            // Ensure that only one argument is provided
+            if (node.Arguments.Count != 1)
             {
-                var argResult = arg.Accept(this);
-                Console.Write(argResult.Value);
+                throw new Exception($"{node.FunctionName} function requires exactly one argument.");
             }
+
+            // Evaluate the argument
+            var argResult = node.Arguments[0].Accept(this).Value;
+
+            // Print the value with or without a newline based on the flag
+            if (addNewLine)
+            {
+                Console.WriteLine(argResult);
+            }
+            else
+            {
+                Console.Write(argResult);
+            }
+
             return new InterpreterResult(null);
         }
+
 
         private InterpreterResult HandleMathFunction(FunctionCallNode node, Func<double, double> func)
         {
