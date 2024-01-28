@@ -35,10 +35,10 @@ namespace BettyLang.Tests.ParserTests
         public void ReturnStatementWithArithmeticExpression_ParsesCorrectly()
         {
             var code = @"
-        function sum() { 
-            return 1 + 2; 
-        }
-        main { sum(); }";
+                    function sum() { 
+                        return 1 + 2; 
+                    }
+                    main { sum(); }";
             var parser = SetupParser(code);
 
             var program = parser.Parse() as ProgramNode;

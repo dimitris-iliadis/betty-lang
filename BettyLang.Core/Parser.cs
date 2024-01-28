@@ -286,7 +286,11 @@ namespace BettyLang.Core
             return new AssignmentNode(left, token, right);
         }
 
-        private ASTNode ParseEmptyStatement() => new EmptyStatementNode();
+        private ASTNode ParseEmptyStatement()
+        {
+            Consume(TokenType.Semicolon);
+            return new EmptyStatementNode();
+        }
 
         private ASTNode ParseFunctionCall()
         {
