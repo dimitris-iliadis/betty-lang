@@ -141,6 +141,7 @@
                 ',' => (TokenType.Comma, ","),
                 '?' => (TokenType.QuestionMark, "?"),
                 ':' => (TokenType.Colon, ":"),
+                '%' => (TokenType.Mod, "%"),
                 _ => throw new Exception($"Invalid character '{_currentChar}' at position {_position}")
             };
 

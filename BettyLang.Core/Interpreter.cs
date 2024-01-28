@@ -213,6 +213,8 @@ namespace BettyLang.Core
                         return new InterpreterResult(leftOperand / rightOperand);
                     case TokenType.Caret:
                         return new InterpreterResult(Math.Pow(leftOperand, rightOperand));
+                    case TokenType.Mod:
+                        return new InterpreterResult(leftOperand % rightOperand);
                 }
             }
 

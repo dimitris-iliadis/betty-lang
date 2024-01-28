@@ -92,13 +92,16 @@ namespace BettyLang.Core
 
             var node = ParseExponent();
 
-            while (_currentToken.Type == TokenType.Mul || _currentToken.Type == TokenType.Div)
+            while (_currentToken.Type == TokenType.Mul || _currentToken.Type == TokenType.Div
+                || _currentToken.Type == TokenType.Mod)
             {
                 var token = _currentToken;
                 if (token.Type == TokenType.Mul)
                     Consume(TokenType.Mul);
                 else if (token.Type == TokenType.Div)
                     Consume(TokenType.Div);
+                else if (token.Type == TokenType.Mod)
+                    Consume(TokenType.Mod);
 
                 node = new BinaryOperatorNode(node, token, ParseExponent());
             }

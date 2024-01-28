@@ -6,7 +6,7 @@
 
         Not, And, Or,
 
-        Plus, Minus, Mul, Div, Caret,
+        Plus, Minus, Mul, Div, Caret, Mod,
 
         LParen, RParen, LBracket, RBracket, Semicolon, Comma, QuestionMark, Colon,
 

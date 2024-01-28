@@ -211,5 +211,35 @@ namespace BettyLang.Tests.RuntimeTests
             var result = interpreter.Interpret();
             Assert.Equal(-5.0, result.AsDouble());
         }
+
+        [Fact]
+        public void ModuloOperator_ReturnsCorrectValue()
+        {
+            var code = "return 5 % 2;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(1.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void ModuloOperator_HasHigherPrecedenceThanAdditionOperator()
+        {
+            var code = "return 5 + 2 % 3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(7.0, result.AsDouble());
+        }
+
+        [Fact]
+        public void ModuloOperator_HasHigherPrecedenceThanSubtractionOperator()
+        {
+            var code = "return 5 - 2 % 3;";
+            var interpreter = SetupInterpreter(code);
+
+            var result = interpreter.Interpret();
+            Assert.Equal(3.0, result.AsDouble());
+        }
     }
 }
