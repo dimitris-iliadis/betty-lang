@@ -19,5 +19,11 @@ namespace BettyLang.Tests.TestUtilities
             Assert.NotEmpty(mainBlock.Statements);
             return mainBlock.Statements[0];
         }
+
+        protected Parser SetupParser(string code)
+        {
+            var lexer = new Lexer(code);
+            return new Parser(lexer);
+        }
     }
 }
