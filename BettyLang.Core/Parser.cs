@@ -21,7 +21,7 @@ namespace BettyLang.Core
                 throw new Exception($"Unexpected token: Expected {tokenType}, found {_currentToken.Type}");
         }
 
-        private ASTNode ParseString()
+        private ASTNode ParseStringLiteral()
         {
             var token = _currentToken;
             Consume(TokenType.StringLiteral);
@@ -88,7 +88,7 @@ namespace BettyLang.Core
         private ASTNode ParseTerm()
         {
             if (_currentToken.Type == TokenType.StringLiteral)
-                return ParseString();
+                return ParseStringLiteral();
 
             var node = ParseExponent();
 
