@@ -1,8 +1,6 @@
-﻿using BettyLang.Core;
-
-namespace BettyLang.Tests.TestUtilities
+﻿namespace BettyLang.Tests.TestUtilities
 {
-    public class InterpreterTestBase
+    public class InterpreterTest
     {
         protected Interpreter SetupInterpreter(string code)
         {

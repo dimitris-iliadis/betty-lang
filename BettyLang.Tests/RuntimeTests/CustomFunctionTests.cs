@@ -1,6 +1,6 @@
 ﻿namespace BettyLang.Tests.RuntimeTests
 {
-    public class CustomFunctionTests : InterpreterTestBase
+    public class CustomFunctionTests : InterpreterTest
     {
         [Fact]
         public void SimpleFunction_ReturnsConstantValue()
