@@ -95,5 +95,13 @@ namespace BettyLang.Tests.ParserTests
             var node = ExtractFirstStatement(code);
             Assert.IsType<ContinueStatementNode>(node);
         }
+
+        [Fact]
+        public void Parse_EmptyStatement_CorrectlyParses()
+        {
+            var code = ";";
+            var node = ExtractFirstStatement(code);
+            Assert.IsType<EmptyStatementNode>(node);
+        }
     }
 }
