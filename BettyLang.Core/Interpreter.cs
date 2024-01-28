@@ -49,6 +49,12 @@ namespace BettyLang.Core
             EnterScope(); // Initialize the global scope
         }
 
+        public InterpreterResult Visit(TernaryOperatorNode node)
+        {
+            var conditionResult = node.Condition.Accept(this).AsBoolean();
+            return conditionResult ? node.TrueExpression.Accept(this) : node.FalseExpression.Accept(this);
+        }
+
         public InterpreterResult Visit(ReturnStatementNode node)
         {
             InterpreterResult returnValue = null;
@@ -232,11 +238,9 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(ProgramNode node)
         {
-            // Visit each function definition and store them in a function table or similar structure
+            // Visit each function definition and store them in a function dictionary
             foreach (var function in node.Functions)
-            {
                 function.Accept(this);
-            }
 
             // Execute the main block
             node.MainBlock.Accept(this);
@@ -275,26 +279,14 @@ namespace BettyLang.Core
 
         private InterpreterResult HandleBuiltInFunction(FunctionCallNode node)
         {
-            if (node.FunctionName == "print")
-            {
-                return HandlePrintFunction(node, addNewLine: false);
-            }
-            else if (node.FunctionName == "println")
-            {
-                return HandlePrintFunction(node, addNewLine: true);
-            }
+            if (node.FunctionName == "print" || node.FunctionName == "println")
+                return HandlePrintFunction(node);
             else if (node.FunctionName == "input")
-            {
                 return HandleInputFunction(node);
-            }
             else if (_mathFunctions.TryGetValue(node.FunctionName, out var func))
-            {
                 return HandleMathFunction(node, func);
-            }
             else
-            {
                 throw new Exception($"Unknown built-in function {node.FunctionName}");
-            }
         }
 
         private InterpreterResult HandleInputFunction(FunctionCallNode node)
@@ -316,26 +308,19 @@ namespace BettyLang.Core
             return new InterpreterResult(value);
         }
 
-        private InterpreterResult HandlePrintFunction(FunctionCallNode node, bool addNewLine)
+        private InterpreterResult HandlePrintFunction(FunctionCallNode node)
         {
             // Ensure that only one argument is provided
             if (node.Arguments.Count != 1)
-            {
                 throw new Exception($"{node.FunctionName} function requires exactly one argument.");
-            }
 
             // Evaluate the argument
             var argResult = node.Arguments[0].Accept(this).Value;
 
-            // Print the value with or without a newline based on the flag
-            if (addNewLine)
-            {
+            if (node.FunctionName == "println")
                 Console.WriteLine(argResult);
-            }
             else
-            {
                 Console.Write(argResult);
-            }
 
             return new InterpreterResult(null);
         }
@@ -378,7 +363,7 @@ namespace BettyLang.Core
                 for (int i = 0; i < node.Arguments.Count; i++)
                 {
                     var argValue = node.Arguments[i].Accept(this).Value;
-                    _scopes.Peek()[function.Parameters[i].Name] = argValue;
+                    _scopes.Peek()[function.Parameters[i]] = argValue;
                 }
 
                 // Execute function body
@@ -408,11 +393,6 @@ namespace BettyLang.Core
 
             _functions[node.FunctionName] = node;
             return new InterpreterResult(null);
-        }
-
-        public InterpreterResult Visit(ParameterNode node)
-        {
-            throw new NotImplementedException();
         }
 
         public InterpreterResult Visit(UnaryOperatorNode node)

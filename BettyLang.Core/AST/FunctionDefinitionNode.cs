@@ -3,10 +3,10 @@
     public class FunctionDefinitionNode : ASTNode
     {
         public string FunctionName { get; }
-        public List<ParameterNode> Parameters { get; }
+        public List<string> Parameters { get; }
         public ASTNode Body { get; }
 
-        public FunctionDefinitionNode(string functionName, List<ParameterNode> parameters, ASTNode body)
+        public FunctionDefinitionNode(string functionName, List<string> parameters, ASTNode body)
         {
             FunctionName = functionName;
             Parameters = parameters;

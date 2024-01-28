@@ -1,6 +1,6 @@
 ﻿namespace BettyLang.Tests.RuntimeTests
 {
-    public class BuiltInFunctionsTests : InterpreterTestBase
+    public class BuiltInFunctionTests : InterpreterTestBase
     {
         [Fact]
         public void PrintFunction_PrintsCorrectValue()

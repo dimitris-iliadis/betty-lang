@@ -139,6 +139,8 @@
                 '<' => (TokenType.LessThan, "<"),
                 '>' => (TokenType.GreaterThan, ">"),
                 ',' => (TokenType.Comma, ","),
+                '?' => (TokenType.QuestionMark, "?"),
+                ':' => (TokenType.Colon, ":"),
                 _ => throw new Exception($"Invalid character '{_currentChar}' at position {_position}")
             };
 

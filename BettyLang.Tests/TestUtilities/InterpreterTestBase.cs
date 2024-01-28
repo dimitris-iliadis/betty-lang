@@ -8,5 +8,10 @@ namespace BettyLang.Tests.TestUtilities
         {
             return new Interpreter(new Parser(new Lexer($"main {{ {code} }}")));
         }
+
+        protected Interpreter SetupInterpreterCustom(string code)
+        {
+            return new Interpreter(new Parser(new Lexer(code)));
+        }
     }
 }

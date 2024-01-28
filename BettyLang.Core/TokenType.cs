@@ -8,7 +8,7 @@
 
         Plus, Minus, Mul, Div, Caret,
 
-        LParen, RParen, LBracket, RBracket, Semicolon, Comma,
+        LParen, RParen, LBracket, RBracket, Semicolon, Comma, QuestionMark, Colon,
 
         Main, Function,
 

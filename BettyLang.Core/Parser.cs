@@ -120,7 +120,21 @@ namespace BettyLang.Core
             return node;
         }
 
-        public ASTNode ParseExpression() => ParseOrExpression();
+        public ASTNode ParseExpression()
+        {
+            var node = ParseLogicalOrExpression();
+
+            while (_currentToken.Type == TokenType.QuestionMark)
+            {
+                Consume(TokenType.QuestionMark);
+                var trueExpression = ParseExpression();
+                Consume(TokenType.Colon);
+                var falseExpression = ParseExpression();
+                node = new TernaryOperatorNode(condition: node, trueExpression, falseExpression);
+            }
+
+            return node;
+        }
 
         private CompoundStatementNode ParseCompoundStatement()
         {
@@ -318,7 +332,7 @@ namespace BettyLang.Core
             Consume(TokenType.Identifier); // Function name
 
             Consume(TokenType.LParen); // Opening parenthesis
-            List<ParameterNode> parameters = ParseParameters();
+            var parameters = ParseParameters();
             Consume(TokenType.RParen); // Closing parenthesis
 
             var body = ParseCompoundStatement(); // Function body
@@ -326,9 +340,9 @@ namespace BettyLang.Core
             return new FunctionDefinitionNode(functionName, parameters, body);
         }
 
-        private List<ParameterNode> ParseParameters()
+        private List<string> ParseParameters()
         {
-            List<ParameterNode> parameters = new List<ParameterNode>();
+            var parameters = new List<string>();
 
             if (_currentToken.Type != TokenType.RParen) // Check if parameter list is empty
             {
@@ -337,7 +351,7 @@ namespace BettyLang.Core
                     if (_currentToken.Type == TokenType.Identifier)
                     {
                         string paramName = _currentToken.Value.ToString();
-                        parameters.Add(new ParameterNode(paramName));
+                        parameters.Add(paramName);
                         Consume(TokenType.Identifier);
                     }
                     else
@@ -407,21 +421,21 @@ namespace BettyLang.Core
                 || type == TokenType.NotEqual;
         }
 
-        private ASTNode ParseOrExpression()
+        private ASTNode ParseLogicalOrExpression()
         {
-            var node = ParseAndExpression();
+            var node = ParseLogicalAndExpression();
 
             while (_currentToken.Type == TokenType.Or)
             {
                 var token = _currentToken;
                 Consume(token.Type); // Consume the Or operator
-                node = new BinaryOperatorNode(node, token, ParseAndExpression());
+                node = new BinaryOperatorNode(node, token, ParseLogicalAndExpression());
             }
 
             return node;
         }
 
-        private ASTNode ParseAndExpression()
+        private ASTNode ParseLogicalAndExpression()
         {
             var node = ParseComparisonExpression();
 
