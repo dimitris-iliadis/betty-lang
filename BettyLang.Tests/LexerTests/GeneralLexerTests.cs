@@ -1,6 +1,6 @@
 ﻿namespace BettyLang.Tests.LexerTests
 {
-    public class GeneralLexerBehaviorTests
+    public class GeneralLexerTests
     {
         [Theory]
         [InlineData("123", "123")]
@@ -106,7 +106,7 @@
         public void PeekNextToken_ReturnsNextTokenWithoutAdvancingPosition()
         {
             // Arrange
-            var input = "var x = 10;";
+            var input = "x = 10;";
             var lexer = new Lexer(input);
 
             // Act
