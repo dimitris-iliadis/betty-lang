@@ -6,8 +6,8 @@
         public void SimpleFunction_ReturnsConstantValue()
         {
             var code = @"
-                function simple() { return 42; }
-                function main() { return simple(); }
+                func simple() { return 42; }
+                func main() { return simple(); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -18,8 +18,8 @@
         public void FunctionWithParameters_CalculatesSum()
         {
             var code = @"
-                function sum(a, b) { return a + b; }
-                function main() { return sum(5, 7); }
+                func sum(a, b) { return a + b; }
+                func main() { return sum(5, 7); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -30,11 +30,11 @@
         public void RecursiveFunction_CalculatesFactorial()
         {
             var code = @"
-                function fact(n) {
+                func fact(n) {
                     if (n <= 1) { return 1; }
                     return n * fact(n - 1);
                 }
-                function main() { return fact(5); }
+                func main() { return fact(5); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -45,9 +45,9 @@
         public void NestedFunctionCalls_WorkCorrectly()
         {
             var code = @"
-                function inner(a) { return a * a; }
-                function outer(b) { return inner(b) + inner(b + 1); }
-                function main() { return outer(3); }
+                func inner(a) { return a * a; }
+                func outer(b) { return inner(b) + inner(b + 1); }
+                func main() { return outer(3); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -58,7 +58,7 @@
         public void FunctionWithLoop_IteratesCorrectly()
         {
             var code = @"
-                function sumToN(n) {
+                func sumToN(n) {
                     result = 0;
                     i = 1;
                     while (i <= n) {
@@ -67,7 +67,7 @@
                     }
                     return result;
                 }
-                function main() { return sumToN(5); }
+                func main() { return sumToN(5); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();

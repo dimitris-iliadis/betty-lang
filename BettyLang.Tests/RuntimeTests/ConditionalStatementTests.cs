@@ -211,9 +211,9 @@
         public void TernaryOperator_WithFunctionCalls()
         {
             var customCode = @"
-            function add(a, b) { return a + b; }
-            function multiply(a, b) { return a * b; }
-            function main() {
+            func add(a, b) { return a + b; }
+            func multiply(a, b) { return a * b; }
+            func main() {
                 return (2 == 2) ? add(4, 5) : multiply(3, 3);
             }
         ";

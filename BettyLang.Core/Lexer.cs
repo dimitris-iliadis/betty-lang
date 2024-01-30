@@ -9,7 +9,7 @@
 
         private static readonly Dictionary<string, Token> _keywords = new()
         {
-            ["function"] = new Token(TokenType.Function, "function"),
+            ["func"] = new Token(TokenType.Function, "func"),
             ["true"] = new Token(TokenType.TrueLiteral, "true"),
             ["false"] = new Token(TokenType.FalseLiteral, "false"),
             ["if"] = new Token(TokenType.If, "if"),

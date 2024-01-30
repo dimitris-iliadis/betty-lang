@@ -21,7 +21,7 @@ namespace BettyLang.Core
         private readonly Dictionary<string, FunctionDefinitionNode> _functions = new();
         private readonly Stack<Dictionary<string, object>> _scopes = new();
 
-        private static readonly Dictionary<string, Func<double, double>> _mathFunctions = new Dictionary<string, Func<double, double>>
+        private static readonly Dictionary<string, Func<double, double>> _mathFunctions = new()
         {
             {"sin", Math.Sin},
             {"cos", Math.Cos},
@@ -29,7 +29,7 @@ namespace BettyLang.Core
             {"sqrt", Math.Sqrt}
         };
 
-        private static readonly HashSet<string> _builtInFunctionNames = new HashSet<string>
+        private static readonly HashSet<string> _builtInFunctionNames = new()
         {
             "print",
             "println",

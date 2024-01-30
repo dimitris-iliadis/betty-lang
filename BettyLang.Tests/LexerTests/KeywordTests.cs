@@ -5,10 +5,10 @@
         [Fact]
         public void FunctionKeyword()
         {
-            var input = "function";
+            var input = "func";
             var token = GetSingleTokenFromLexer(input);
             Assert.Equal(TokenType.Function, token.Type);
-            Assert.Equal("function", token.Value);
+            Assert.Equal("func", token.Value);
         }
 
         [Fact]
