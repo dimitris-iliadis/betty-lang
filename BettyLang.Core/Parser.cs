@@ -22,14 +22,14 @@ namespace BettyLang.Core
                 throw new Exception($"Unexpected token: Expected {tokenType}, found {_currentToken.Type}");
         }
 
-        private ASTNode ParseStringLiteral()
+        private StringLiteralNode ParseStringLiteral()
         {
             var token = _currentToken;
             Consume(TokenType.StringLiteral);
             return new StringLiteralNode(token.Value.ToString()!);
         }
 
-        private ASTNode ParseVariable()
+        private VariableNode ParseVariable()
         {
             var node = new VariableNode(_currentToken);
             Consume(TokenType.Identifier);
@@ -42,12 +42,9 @@ namespace BettyLang.Core
 
             switch (token.Type)
             {
-                case TokenType.TrueLiteral:
-                    Consume(TokenType.TrueLiteral);
-                    return new BooleanLiteralNode(true);
-
-                case TokenType.FalseLiteral:
-                    Consume(TokenType.FalseLiteral);
+                case TokenType.BooleanLiteral:
+                    Consume(TokenType.BooleanLiteral);
+                    if (token.Value == "true") return new BooleanLiteralNode(true);
                     return new BooleanLiteralNode(false);
 
                 case TokenType.Plus:
@@ -93,16 +90,16 @@ namespace BettyLang.Core
 
             var node = ParseExponent();
 
-            while (_currentToken.Type == TokenType.Mul || _currentToken.Type == TokenType.Div
-                || _currentToken.Type == TokenType.Mod)
+            while (_currentToken.Type == TokenType.Star || _currentToken.Type == TokenType.Slash
+                || _currentToken.Type == TokenType.Percent)
             {
                 var token = _currentToken;
-                if (token.Type == TokenType.Mul)
-                    Consume(TokenType.Mul);
-                else if (token.Type == TokenType.Div)
-                    Consume(TokenType.Div);
-                else if (token.Type == TokenType.Mod)
-                    Consume(TokenType.Mod);
+                if (token.Type == TokenType.Star)
+                    Consume(TokenType.Star);
+                else if (token.Type == TokenType.Slash)
+                    Consume(TokenType.Slash);
+                else if (token.Type == TokenType.Percent)
+                    Consume(TokenType.Percent);
 
                 node = new BinaryOperatorNode(node, token, ParseExponent());
             }
@@ -124,7 +121,7 @@ namespace BettyLang.Core
             return node;
         }
 
-        public ASTNode ParseExpression()
+        private ASTNode ParseExpression()
         {
             var node = ParseLogicalOrExpression();
 
@@ -166,7 +163,7 @@ namespace BettyLang.Core
             return results;
         }
 
-        private ASTNode ParseIfStatement()
+        private IfStatementNode ParseIfStatement()
         {
             Consume(TokenType.If);
             Consume(TokenType.LParen);
@@ -200,7 +197,7 @@ namespace BettyLang.Core
             return new IfStatementNode(condition, thenStatement, elseIfStatements, elseStatement);
         }
 
-        private ASTNode ParseWhileStatement()
+        private WhileStatementNode ParseWhileStatement()
         {
             Consume(TokenType.While);
             Consume(TokenType.LParen);
@@ -210,21 +207,21 @@ namespace BettyLang.Core
             return new WhileStatementNode(condition, body);
         }
 
-        private ASTNode ParseBreakStatement()
+        private BreakStatementNode ParseBreakStatement()
         {
             Consume(TokenType.Break);
             Consume(TokenType.Semicolon);
             return new BreakStatementNode();
         }
 
-        private ASTNode ParseContinueStatement()
+        private ContinueStatementNode ParseContinueStatement()
         {
             Consume(TokenType.Continue);
             Consume(TokenType.Semicolon); // Consume semicolon here
             return new ContinueStatementNode();
         }
 
-        private ASTNode ParseReturnStatement()
+        private ReturnStatementNode ParseReturnStatement()
         {
             Consume(TokenType.Return);
             ASTNode returnValue = null;
@@ -236,9 +233,9 @@ namespace BettyLang.Core
             return new ReturnStatementNode(returnValue);
         }
 
-        private ASTNode ParseFunctionCallStatement()
+        private FunctionCallNode ParseFunctionCallStatement()
         {
-            var functionCallNode = ParseFunctionCall() as FunctionCallNode;
+            var functionCallNode = ParseFunctionCall();
             Consume(TokenType.Semicolon);
             return functionCallNode;
         }
@@ -262,7 +259,7 @@ namespace BettyLang.Core
         private ASTNode ParseIdentifierStatement()
         {
             var lookahead = _lexer.PeekNextToken();
-            if (lookahead.Type == TokenType.Assign)
+            if (lookahead.Type == TokenType.Assignment)
             {
                 return ParseAssignmentStatement();
             }
@@ -277,23 +274,23 @@ namespace BettyLang.Core
         }
 
 
-        private ASTNode ParseAssignmentStatement()
+        private AssignmentNode ParseAssignmentStatement()
         {
             var left = ParseVariable();
             var token = _currentToken;
-            Consume(TokenType.Assign);
+            Consume(TokenType.Assignment);
             var right = ParseExpression();
             Consume(TokenType.Semicolon);
             return new AssignmentNode(left, token, right);
         }
 
-        private ASTNode ParseEmptyStatement()
+        private EmptyStatementNode ParseEmptyStatement()
         {
             Consume(TokenType.Semicolon);
             return new EmptyStatementNode();
         }
 
-        private ASTNode ParseFunctionCall()
+        private FunctionCallNode ParseFunctionCall()
         {
             // The current token is expected to be an identifier (the function name)
             string functionName = _currentToken.Value;
@@ -378,7 +375,7 @@ namespace BettyLang.Core
             return parameters;
         }
 
-        private ASTNode ParseProgram()
+        private ProgramNode ParseProgram()
         {
             List<FunctionDefinitionNode> functions = new List<FunctionDefinitionNode>();
 
@@ -410,7 +407,7 @@ namespace BettyLang.Core
             return node;
         }
 
-        private bool IsComparisonOperator(TokenType type)
+        private static bool IsComparisonOperator(TokenType type)
         {
             return type == TokenType.GreaterThan
                 || type == TokenType.LessThan

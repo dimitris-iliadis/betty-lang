@@ -226,13 +226,13 @@ namespace BettyLang.Core
                         return new InterpreterResult(leftOperand + rightOperand);
                     case TokenType.Minus:
                         return new InterpreterResult(leftOperand - rightOperand);
-                    case TokenType.Mul:
+                    case TokenType.Star:
                         return new InterpreterResult(leftOperand * rightOperand);
-                    case TokenType.Div:
+                    case TokenType.Slash:
                         return new InterpreterResult(leftOperand / rightOperand);
                     case TokenType.Caret:
                         return new InterpreterResult(Math.Pow(leftOperand, rightOperand));
-                    case TokenType.Mod:
+                    case TokenType.Percent:
                         return new InterpreterResult(leftOperand % rightOperand);
                 }
             }

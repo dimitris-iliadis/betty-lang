@@ -10,8 +10,8 @@
         private static readonly Dictionary<string, Token> _keywords = new()
         {
             ["func"] = new Token(TokenType.Function, "func"),
-            ["true"] = new Token(TokenType.TrueLiteral, "true"),
-            ["false"] = new Token(TokenType.FalseLiteral, "false"),
+            ["true"] = new Token(TokenType.BooleanLiteral, "true"),
+            ["false"] = new Token(TokenType.BooleanLiteral, "false"),
             ["if"] = new Token(TokenType.If, "if"),
             ["elif"] = new Token(TokenType.Elif, "elif"),
             ["else"] = new Token(TokenType.Else, "else"),
@@ -125,8 +125,8 @@
             {
                 '+' => (TokenType.Plus, "+"),
                 '-' => (TokenType.Minus, "-"),
-                '*' => (TokenType.Mul, "*"),
-                '/' => (TokenType.Div, "/"),
+                '*' => (TokenType.Star, "*"),
+                '/' => (TokenType.Slash, "/"),
                 '^' => (TokenType.Caret, "^"),
                 '(' => (TokenType.LParen, "("),
                 ')' => (TokenType.RParen, ")"),
@@ -134,13 +134,13 @@
                 '}' => (TokenType.RBrace, "}"),
                 ';' => (TokenType.Semicolon, ";"),
                 '!' => (TokenType.Not, "!"),
-                '=' => (TokenType.Assign, "="),
+                '=' => (TokenType.Assignment, "="),
                 '<' => (TokenType.LessThan, "<"),
                 '>' => (TokenType.GreaterThan, ">"),
                 ',' => (TokenType.Comma, ","),
                 '?' => (TokenType.QuestionMark, "?"),
                 ':' => (TokenType.Colon, ":"),
-                '%' => (TokenType.Mod, "%"),
+                '%' => (TokenType.Percent, "%"),
                 _ => throw new Exception($"Invalid character '{_currentChar}' at position {_position}")
             };
 

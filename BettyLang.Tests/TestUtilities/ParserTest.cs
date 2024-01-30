@@ -1,6 +1,4 @@
-﻿using BettyLang.Core.AST;
-
-namespace BettyLang.Tests.TestUtilities
+﻿namespace BettyLang.Tests.TestUtilities
 {
     public class ParserTest
     {
