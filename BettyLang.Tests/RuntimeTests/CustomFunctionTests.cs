@@ -7,7 +7,7 @@
         {
             var code = @"
                 function simple() { return 42; }
-                main { return simple(); }
+                function main() { return simple(); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -19,7 +19,7 @@
         {
             var code = @"
                 function sum(a, b) { return a + b; }
-                main { return sum(5, 7); }
+                function main() { return sum(5, 7); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -34,7 +34,7 @@
                     if (n <= 1) { return 1; }
                     return n * fact(n - 1);
                 }
-                main { return fact(5); }
+                function main() { return fact(5); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -47,7 +47,7 @@
             var code = @"
                 function inner(a) { return a * a; }
                 function outer(b) { return inner(b) + inner(b + 1); }
-                main { return outer(3); }
+                function main() { return outer(3); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();
@@ -67,7 +67,7 @@
                     }
                     return result;
                 }
-                main { return sumToN(5); }
+                function main() { return sumToN(5); }
             ";
             var interpreter = SetupInterpreterCustom(code);
             var result = interpreter.Interpret();

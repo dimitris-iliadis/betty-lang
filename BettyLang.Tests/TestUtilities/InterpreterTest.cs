@@ -4,7 +4,7 @@
     {
         protected Interpreter SetupInterpreter(string code)
         {
-            return new Interpreter(new Parser(new Lexer($"main {{ {code} }}")));
+            return new Interpreter(new Parser(new Lexer($"function main() {{ {code} }}")));
         }
 
         protected Interpreter SetupInterpreterCustom(string code)

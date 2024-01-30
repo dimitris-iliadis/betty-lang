@@ -3,15 +3,6 @@
     public class KeywordTests : LexerTest
     {
         [Fact]
-        public void MainKeyword()
-        {
-            var input = "main";
-            var token = GetSingleTokenFromLexer(input);
-            Assert.Equal(TokenType.Main, token.Type);
-            Assert.Equal("main", token.Value);
-        }
-
-        [Fact]
         public void FunctionKeyword()
         {
             var input = "function";

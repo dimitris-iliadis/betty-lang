@@ -213,7 +213,7 @@
             var customCode = @"
             function add(a, b) { return a + b; }
             function multiply(a, b) { return a * b; }
-            main {
+            function main() {
                 return (2 == 2) ? add(4, 5) : multiply(3, 3);
             }
         ";

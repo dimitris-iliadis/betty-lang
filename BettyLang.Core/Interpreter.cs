@@ -46,7 +46,26 @@ namespace BettyLang.Core
         public Interpreter(Parser parser)
         {
             _parser = parser;
-            EnterScope(); // Initialize the global scope
+        }
+
+        public InterpreterResult Visit(ProgramNode node)
+        {
+            // Visit each function definition and store it in a dictionary
+            foreach (var function in node.Functions)
+                function.Accept(this);
+
+            if (_functions.TryGetValue("main", out var mainFunction))
+            {
+                if (mainFunction.Parameters.Count != 0)
+                    throw new Exception("main() function cannot have parameters.");
+
+                // Execute the main function
+                return Visit(new FunctionCallNode("main", []));
+            }
+            else
+            {
+                throw new Exception("No main function found.");
+            }
         }
 
         public InterpreterResult Visit(TernaryOperatorNode node)
@@ -238,18 +257,6 @@ namespace BettyLang.Core
 
         public InterpreterResult Visit(StringLiteralNode node) => new InterpreterResult(node.Value);
 
-        public InterpreterResult Visit(ProgramNode node)
-        {
-            // Visit each function definition and store them in a function dictionary
-            foreach (var function in node.Functions)
-                function.Accept(this);
-
-            // Execute the main block
-            node.MainBlock.Accept(this);
-
-            return new InterpreterResult(null);
-        }
-
         public InterpreterResult Visit(CompoundStatementNode node)
         {
             foreach (var statement in node.Statements)
@@ -418,16 +425,7 @@ namespace BettyLang.Core
         public InterpreterResult Interpret()
         {
             var tree = _parser.Parse();
-            try
-            {
-                tree.Accept(this);
-            }
-            catch (ReturnException ex)
-            {
-                return ex.ReturnValue;
-            }
-
-            return new InterpreterResult(null);
+            return tree.Accept(this);
         }
 
         private void EnterScope()

@@ -6,6 +6,7 @@ namespace BettyLang.Core
     {
         private readonly Lexer _lexer;
         private Token _currentToken;
+        private HashSet<string> _definedFunctions = new HashSet<string>(); // Store defined function names
 
         public Parser(Lexer lexer)
         {
@@ -324,9 +325,19 @@ namespace BettyLang.Core
 
         private FunctionDefinitionNode ParseFunctionDefinition()
         {
-            // Assuming "function" token is already consumed
+            // "function" token is already consumed
             string functionName = _currentToken.Value;
             Consume(TokenType.Identifier); // Function name
+
+            // Check for duplicate function definition
+            if (_definedFunctions.Contains(functionName))
+            {
+                throw new Exception($"Function '{functionName}' is already defined.");
+            }
+            else
+            {
+                _definedFunctions.Add(functionName); // Add function name to the set
+            }
 
             Consume(TokenType.LParen); // Opening parenthesis
             var parameters = ParseParameters();
@@ -367,13 +378,11 @@ namespace BettyLang.Core
             return parameters;
         }
 
-        private CompoundStatementNode ParseMainBlock() => ParseCompoundStatement();
-
         private ASTNode ParseProgram()
         {
             List<FunctionDefinitionNode> functions = new List<FunctionDefinitionNode>();
 
-            while (_currentToken.Type != TokenType.EOF && _currentToken.Type != TokenType.Main)
+            while (_currentToken.Type != TokenType.EOF)
             {
                 if (_currentToken.Type == TokenType.Function)
                 {
@@ -384,14 +393,7 @@ namespace BettyLang.Core
                     throw new Exception("Unexpected token: " + _currentToken.Type);
             }
 
-            if (_currentToken.Type == TokenType.Main)
-            {
-                Consume(TokenType.Main);
-                var mainBlock = ParseMainBlock();
-                return new ProgramNode(functions, mainBlock);
-            }
-            else
-                throw new Exception("Missing main block in the program");
+            return new ProgramNode(functions);
         }
 
         private ASTNode ParseComparisonExpression()

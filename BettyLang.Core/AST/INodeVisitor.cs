@@ -10,7 +10,6 @@
         InterpreterResult Visit(AssignmentNode node);
         InterpreterResult Visit(VariableNode node);
         InterpreterResult Visit(EmptyStatementNode node);
-        InterpreterResult Visit(ProgramNode node);
         InterpreterResult Visit(FunctionDefinitionNode node);
         InterpreterResult Visit(FunctionCallNode node);
         InterpreterResult Visit(BooleanLiteralNode node);
@@ -20,5 +19,6 @@
         InterpreterResult Visit(ContinueStatementNode node);
         InterpreterResult Visit(ReturnStatementNode node);
         InterpreterResult Visit(TernaryOperatorNode node);
+        InterpreterResult Visit(ProgramNode node);
     }
 }

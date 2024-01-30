@@ -26,4 +26,8 @@
     <ProjectReference Include="..\BettyLang.Core\BettyLang.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ParserTests\" />
+  </ItemGroup>
+
 </Project>

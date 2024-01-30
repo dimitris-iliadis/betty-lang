@@ -10,7 +10,7 @@
 
         LParen, RParen, LBracket, RBracket, Semicolon, Comma, QuestionMark, Colon,
 
-        Main, Function,
+        Function,
 
         Assign, If, Elif, Else, While, Break, Continue, Return,
         
