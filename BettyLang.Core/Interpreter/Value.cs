@@ -10,6 +10,29 @@
         None
     }
 
+    public class ValueList
+    {
+        public List<Value> Items { get; } = new List<Value>();
+
+        public ValueList() { }
+
+        public ValueList(IEnumerable<Value> initial)
+        {
+            Items.AddRange(initial);
+        }
+
+        public ValueList Clone()
+        {
+            // Deep copy: create new list with cloned elements
+            var clonedItems = new List<Value>();
+            foreach (var item in Items)
+            {
+                clonedItems.Add(Value.DeepCopy(item));
+            }
+            return new ValueList(clonedItems);
+        }
+    }
+
     public readonly struct Value : IEquatable<Value>
     {
         public readonly ValueType Type;
@@ -17,7 +40,7 @@
         private readonly char _char;
         private readonly int _stringId;
         private readonly bool _boolean;
-        private readonly List<Value> _list = []; // Field to hold list data
+        private readonly ValueList? _list;
 
         private Value(ValueType type) : this()
         {
@@ -44,7 +67,7 @@
             _char = character;
         }
 
-        private Value(List<Value> list) : this(ValueType.List)
+        private Value(ValueList list) : this(ValueType.List)
         {
             _list = list;
         }
@@ -58,23 +81,8 @@
         public static Value FromNumber(double number) => new Value(number);
         public static Value FromBoolean(bool boolean) => new Value(boolean);
         public static Value FromChar(char character) => new Value(character);
-        public static Value FromList(List<Value> list) => new Value(list);
+        public static Value FromList(List<Value> list) => new Value(new ValueList(list));
         public static Value None() => new Value(ValueType.None);
-
-        // This method creates a new list with the added element
-        public static Value AddToList(Value list, Value newItem)
-        {
-            if (list.Type != ValueType.List)
-                throw new InvalidOperationException("The left operand must be a list.");
-
-            // If the new item is a list, concatenate the two lists
-            if (newItem.Type == ValueType.List)
-                return Value.FromList([.. list.AsList(), .. newItem.AsList()]);
-
-            // Clone the existing list and add the new item
-            var newList = new List<Value>(list.AsList()) { newItem };
-            return Value.FromList(newList);
-        }
 
         public readonly char AsChar()
         {
@@ -109,12 +117,47 @@
 
         public List<Value> AsList()
         {
-            if (Type == ValueType.String)
-                return new List<Value>(StringTable.GetString(_stringId).Select(c => Value.FromChar(c)));
+            return Type switch
+            {
+                ValueType.List => _list?.Items ?? new List<Value>(),
+                ValueType.String => StringTable.GetString(_stringId)
+                    .Select(c => Value.FromChar(c))
+                    .ToList(),
+                _ => throw new InvalidOperationException($"Expected a {ValueType.List} or {ValueType.String}, but got {Type}.")
+            };
+        }
 
-            if (Type != ValueType.List)
-                throw new InvalidOperationException($"Expected a {ValueType.List}, but got {Type}.");
-            return _list;
+        public static Value DeepCopy(Value value)
+        {
+            return value.Type switch
+            {
+                // Primitive types are immutable, so they can be returned as-is
+                ValueType.Number => Value.FromNumber(value.AsNumber()),
+                ValueType.String => Value.FromString(value.AsString()),
+                ValueType.Boolean => Value.FromBoolean(value.AsBoolean()),
+                ValueType.Char => Value.FromChar(value.AsChar()),
+
+                // For lists, recursively deep copy each element
+                ValueType.List => Value.FromList(DeepCopyList(value.AsList())),
+
+                // None type can be returned as-is
+                ValueType.None => Value.None(),
+
+                _ => throw new InvalidOperationException($"Unsupported type for deep copy: {value.Type}")
+            };
+        }
+
+        private static List<Value> DeepCopyList(List<Value> originalList)
+        {
+            // Create a new list with deep copied elements
+            var deepCopiedList = new List<Value>();
+            foreach (var element in originalList)
+            {
+                // Recursively deep copy each element
+                deepCopiedList.Add(DeepCopy(element));
+            }
+
+            return deepCopiedList;
         }
 
         public override string ToString()
@@ -125,7 +168,9 @@
                 ValueType.String => StringTable.GetString(_stringId),
                 ValueType.Boolean => _boolean.ToString(),
                 ValueType.Char => _char.ToString(),
-                ValueType.List => $"[{string.Join(", ", _list.Select(item => item.ToString()))}]",
+                ValueType.List => _list == null
+                    ? "[]"
+                    : $"[{string.Join(", ", _list.Items.Select(item => item.ToString()))}]",
                 ValueType.None => "None",
                 _ => throw new InvalidOperationException($"Unknown type {Type}.")
             };
@@ -142,9 +187,11 @@
                 ValueType.String => _stringId == other._stringId,
                 ValueType.Boolean => _boolean == other._boolean,
                 ValueType.Char => _char == other._char,
-                ValueType.List => _list.SequenceEqual(other._list),
+                ValueType.List => _list == null && other._list == null
+                    || (_list != null && other._list != null &&
+                        _list.Items.SequenceEqual(other._list.Items)),
                 ValueType.None => true,
-                _ => throw new InvalidOperationException($"Unknown type {Type}."),
+                _ => throw new InvalidOperationException($"Unknown type {Type}.")
             };
         }
 
@@ -155,38 +202,18 @@
 
         public override int GetHashCode()
         {
-            // Choose a large prime number to start with and another to combine.
-            unchecked // Overflow is fine, just wrap
+            unchecked
             {
-                int hash = 17;
-                hash = hash * 23 + Type.GetHashCode();
-                switch (Type)
+                return Type switch
                 {
-                    case ValueType.Number:
-                        hash = hash * 23 + _number.GetHashCode();
-                        break;
-                    case ValueType.String:
-                        hash = hash * 23 + _stringId.GetHashCode();
-                        break;
-                    case ValueType.Boolean:
-                        hash = hash * 23 + _boolean.GetHashCode();
-                        break;
-                    case ValueType.Char:
-                        hash = hash * 23 + _char.GetHashCode();
-                        break;
-                    case ValueType.List:
-                        foreach (var val in _list)
-                        {
-                            hash = hash * 23 + val.GetHashCode();
-                        }
-                        break;
-                    case ValueType.None:
-                        // Nothing needed for None type
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unknown type {Type}.");
-                }
-                return hash;
+                    ValueType.Number => HashCode.Combine(Type, _number),
+                    ValueType.String => HashCode.Combine(Type, _stringId),
+                    ValueType.Boolean => HashCode.Combine(Type, _boolean),
+                    ValueType.Char => HashCode.Combine(Type, _char),
+                    ValueType.List => HashCode.Combine(Type, _list),
+                    ValueType.None => Type.GetHashCode(),
+                    _ => throw new InvalidOperationException($"Unknown type {Type}.")
+                };
             }
         }
 

@@ -303,12 +303,32 @@ namespace BettyLang.Core.Interpreter
                     // If the left operand is a list, add the right operand to the list
                     if (leftResult.Type == ValueType.List)
                     {
-                        return Value.AddToList(leftResult, rightResult);
+                        var list = leftResult.AsList();
+                        // If right is also a list, extend with its items
+                        if (rightResult.Type == ValueType.List)
+                        {
+                            list.AddRange(rightResult.AsList());
+                        }
+                        else
+                        {
+                            list.Add(rightResult);
+                        }
+                        return leftResult;
                     }
                     // If the right operand is a list, add the left operand to the list
                     if (rightResult.Type == ValueType.List)
                     {
-                        return Value.AddToList(rightResult, leftResult);
+                        var list = rightResult.AsList();
+                        // If left is also a list, prepend its items
+                        if (leftResult.Type == ValueType.List)
+                        {
+                            list.InsertRange(0, leftResult.AsList());
+                        }
+                        else
+                        {
+                            list.Insert(0, leftResult);
+                        }
+                        return rightResult;
                     }
                     // If none are strings or lists, perform numerical addition
                     return Value.FromNumber(leftResult.AsNumber() + rightResult.AsNumber());
@@ -471,7 +491,23 @@ namespace BettyLang.Core.Interpreter
                 case (ValueType.List, _):
                     if (operatorType != TokenType.PlusEqual)
                         throw new InvalidOperationException("Compound assignment for lists only supports the += operator.");
-                    return Value.AddToList(left, right);
+
+                    // Mutate the original list in-place
+                    var list = left.AsList();
+
+                    // If the right value is a list, extend the list
+                    if (right.Type == ValueType.List)
+                    {
+                        list.AddRange(right.AsList());
+                    }
+                    // Otherwise, add the single item
+                    else
+                    {
+                        list.Add(right);
+                    }
+
+                    // Return the same Value, which now contains the mutated list
+                    return left;
 
                 default:
                     throw new InvalidOperationException("Compound assignment is not supported for the given types.");
