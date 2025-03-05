@@ -9,7 +9,7 @@
             var parser = SetupParser(code);
             var result = parser.Parse() as Program;
 
-            var mainFunction = result.Functions[0];
+            var mainFunction = result!.Functions[0];
             var ifStatement = mainFunction.Body.Statements[0] as IfStatement;
 
             Assert.NotNull(ifStatement);
@@ -24,7 +24,7 @@
             var parser = SetupParser(code);
             var result = parser.Parse() as Program;
 
-            var mainFunction = result.Functions[0];
+            var mainFunction = result!.Functions[0];
             var ifStatement = mainFunction.Body.Statements[0] as IfStatement;
 
             Assert.NotNull(ifStatement);
@@ -40,7 +40,7 @@
             var parser = SetupParser(code);
             var result = parser.Parse() as Program;
 
-            var mainFunction = result.Functions[0];
+            var mainFunction = result!.Functions[0];
             var ifStatement = mainFunction.Body.Statements[0] as IfStatement;
 
             Assert.NotNull(ifStatement);
@@ -54,7 +54,7 @@
             var parser = SetupParser(code);
             var result = parser.Parse() as Program;
 
-            var mainFunction = result.Functions[0];
+            var mainFunction = result!.Functions[0];
             var whileStatement = mainFunction.Body.Statements[0] as WhileStatement;
 
             Assert.NotNull(whileStatement);
