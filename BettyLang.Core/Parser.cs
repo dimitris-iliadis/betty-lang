@@ -141,7 +141,7 @@ namespace BettyLang.Core
             Consume(TokenType.RBracket); // Consume the closing bracket (end of the range)
 
             // Construct and return a FunctionCall AST node for the range function
-            return new FunctionCall("range", new List<Expression> { start, end });
+            return new FunctionCall(new List<Expression> { start, end }, functionName : "range");
         }
 
         private Expression ParseListOrRange()
@@ -505,8 +505,13 @@ namespace BettyLang.Core
             // Consume the closing parenthesis
             Consume(TokenType.RParen);
 
-            // Return a new function call node
-            return new FunctionCall((functionExpr as Variable)!.Name, arguments);
+            if (functionExpr is Variable identifier)
+            {
+                return new FunctionCall(arguments, functionName : identifier.Name);
+            }
+
+            // Inline anonymous function call
+            return new FunctionCall(arguments, functionExpr);
         }
 
         private FunctionDefinition ParseFunctionDefinition()

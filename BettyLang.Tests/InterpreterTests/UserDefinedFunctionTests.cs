@@ -195,5 +195,19 @@
             var result = interpreter.Interpret();
             Assert.False(result.AsBoolean()); // Should be false since they are different function references
         }
+
+        [Fact]
+        public void LambdaFunction_DirectCallReturnsExpectedValue()
+        {
+            var code = @"
+        func main() {
+            return (func() { return 42; })(); # Directly calling a lambda
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(42, result.AsNumber()); // Should return 42
+        }
+
     }
 }

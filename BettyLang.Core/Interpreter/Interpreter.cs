@@ -31,7 +31,7 @@ namespace BettyLang.Core.Interpreter
                     throw new Exception("main() function cannot have parameters.");
 
                 // Execute the main function
-                return Visit(new FunctionCall("main", []));
+                return Visit(new FunctionCall([], functionName : "main"));
             }
             
             throw new Exception("No main function found.");
@@ -578,65 +578,71 @@ namespace BettyLang.Core.Interpreter
         public void Visit(EmptyStatement node) { }
         public Value Visit(FunctionCall node)
         {
-            // If the function is an intrinsic function, invoke it
-            if (_intrinsicFunctions.TryGetValue(node.FunctionName, out var intrinsicFunction))
-                return intrinsicFunction.Invoke(node, this);
+            FunctionDefinition? function = null;
 
-            // Function is not an intrinsic function, look for a user-defined global function
-            bool isGlobal = true;
-            FunctionExpression? localFunction = null;
-            if (!_functions.TryGetValue(node.FunctionName, out var function))
+            // Resolve function reference
+            if (node.FunctionName is not null)
             {
-                isGlobal = false;
+                if (_intrinsicFunctions.TryGetValue(node.FunctionName, out var intrinsicFunction))
+                    return intrinsicFunction.Invoke(node, this);
 
-                // As a last resort, try to treat it as a local function
-                localFunction = _scopeManager.LookupVariable(node.FunctionName).AsFunction();
+                if (_functions.TryGetValue(node.FunctionName, out var globalFunction))
+                {
+                    function = globalFunction;
+                }
+                else
+                {
+                    var funcExpr = _scopeManager.LookupVariable(node.FunctionName).AsFunction();
+                    function = new FunctionDefinition(null, funcExpr.Parameters, funcExpr.Body); // Convert to FunctionDefinition
+                }
+            }
+            else if (node.Expression is FunctionExpression funcExpr)
+            {
+                function = new FunctionDefinition(null, funcExpr.Parameters, funcExpr.Body); // Convert inline function
             }
 
-            // Enter a new scope for function execution
+            if (function is null)
+                throw new Exception($"Function not found: {node.FunctionName ?? "anonymous function"}");
+
+            // Enter function scope
             _scopeManager.EnterScope();
 
-            // Prepare for function execution by saving the current context
+            // Save execution context
             int previousLoopDepth = _context.LoopDepth;
-            _context.LoopDepth = 0; // Reset loop depth for the new function context
-            var previousFlowState = _context.FlowState; // Save the current flow state
-            _context.FlowState = ControlFlowState.Normal; // Reset flow state for function execution
+            _context.LoopDepth = 0;
+            var previousFlowState = _context.FlowState;
+            _context.FlowState = ControlFlowState.Normal;
 
-            // Set function parameters in the new scope
+            // Bind function arguments
             for (int i = 0; i < node.Arguments.Count; i++)
             {
                 var argValue = node.Arguments[i].Accept(this);
-                _scopeManager.SetVariable(isGlobal 
-                    ? function!.Parameters[i] : 
-                    localFunction!.Parameters[i], 
-                    argValue, true);
+                _scopeManager.SetVariable(function.Parameters[i], argValue, true);
             }
 
             // Execute function body
-            if (isGlobal) function!.Body.Accept(this);
-            else localFunction!.Body.Accept(this);
+            function.Body.Accept(this);
 
-                // Capture the return value if the function execution resulted in a return
-                Value returnValue =
-                    _context.FlowState == ControlFlowState.Return
-                    ? _context.LastReturnValue : Value.None();
+            // Retrieve return value
+            Value returnValue = (_context.FlowState == ControlFlowState.Return)
+                ? _context.LastReturnValue
+                : Value.None();
 
-            // Restore the context after function execution
-            _context.LoopDepth = previousLoopDepth; // Restore the loop depth to its previous state
-            _context.FlowState = previousFlowState; // Restore the flow state to its previous state
-
-            // Exit the function scope
+            // Restore previous execution context and exit function scope
+            _context.LoopDepth = previousLoopDepth;
+            _context.FlowState = previousFlowState;
             _scopeManager.ExitScope();
 
             return returnValue;
         }
 
+
         public void Visit(FunctionDefinition node)
         {
-            if (_intrinsicFunctions.ContainsKey(node.FunctionName))
+            if (_intrinsicFunctions.ContainsKey(node.FunctionName!))
                 throw new Exception($"Function name '{node.FunctionName}' is reserved for built-in functions.");
 
-            _functions[node.FunctionName] = node;
+            _functions[node.FunctionName!] = node;
         }
 
         public Value Visit(UnaryOperatorExpression node)
