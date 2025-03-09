@@ -1,4 +1,5 @@
 ﻿using BettyLang.Core.AST;
+using System.Linq.Expressions;
 
 namespace BettyLang.Core.Interpreter
 {
@@ -600,6 +601,12 @@ namespace BettyLang.Core.Interpreter
             {
                 function = new FunctionDefinition(null, funcExpr.Parameters, funcExpr.Body); // Convert inline function
             }
+            else if (node.Expression is IndexerExpression indexExpr)
+            {
+                // Resolve function stored in a list
+                funcExpr = indexExpr.Accept(this).AsFunction();
+                function = new FunctionDefinition(null, funcExpr.Parameters, funcExpr.Body);
+            }
 
             if (function is null)
                 throw new Exception($"Function not found: {node.FunctionName ?? "anonymous function"}");
@@ -635,7 +642,6 @@ namespace BettyLang.Core.Interpreter
 
             return returnValue;
         }
-
 
         public void Visit(FunctionDefinition node)
         {

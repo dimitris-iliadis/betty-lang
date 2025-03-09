@@ -209,5 +209,27 @@
             Assert.Equal(42, result.AsNumber()); // Should return 42
         }
 
+        [Fact]
+        public void FunctionExpressions_CanBeStoredInLists_AndCalled()
+        {
+            var code = @"
+        func main() {
+            funcs = [
+                func(x) { return x + 1; },
+                func(x) { return x * 2; }
+            ];
+            
+            result1 = funcs[0](3); # Should return 3 + 1 = 4
+            result2 = funcs[1](3); # Should return 3 * 2 = 6
+            
+            return result1 + result2; # 4 + 6 = 10
+        }
+    ";
+
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+
+            Assert.Equal(10, result.AsNumber());
+        }
     }
 }

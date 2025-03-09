@@ -140,7 +140,7 @@ namespace BettyLang.Core.Interpreter
         public readonly FunctionExpression AsFunction()
         {
             if (Type != ValueType.Function)
-                throw new InvalidOperationException($"Expected a {ValueType.Boolean}, but got {Type}.");
+                throw new InvalidOperationException($"Expected a {ValueType.Function}, but got {Type}.");
             return _function!;
         }
 
@@ -153,10 +153,12 @@ namespace BettyLang.Core.Interpreter
                 ValueType.String => Value.FromString(value.AsString()),
                 ValueType.Boolean => Value.FromBoolean(value.AsBoolean()),
                 ValueType.Char => Value.FromChar(value.AsChar()),
-                ValueType.Function => Value.FromFunction(value.AsFunction()),
 
                 // For lists, recursively deep copy each element
                 ValueType.List => Value.FromList(DeepCopyList(value.AsList())),
+
+                // Functions can be returned as-is
+                ValueType.Function => Value.FromFunction(value.AsFunction()),
 
                 // None type can be returned as-is
                 ValueType.None => Value.None(),
