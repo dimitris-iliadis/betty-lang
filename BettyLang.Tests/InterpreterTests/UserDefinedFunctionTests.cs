@@ -73,5 +73,127 @@
             var result = interpreter.Interpret();
             Assert.Equal(15, result.AsNumber()); // Sum of 1 to 5
         }
+
+        [Fact]
+        public void LocalFunction_CanBeCalled()
+        {
+            var code = @"
+        func main() {
+            greet = func() { return ""Hello""; };
+            return greet();
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.Equal("Hello", result.AsString());
+        }
+
+        [Fact]
+        public void LocalFunction_CanTakeArguments()
+        {
+            var code = @"
+        func main() {
+            add = func(a, b) { return a + b; };
+            return add(2, 3);
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(5, result.AsNumber());
+        }
+
+        [Fact]
+        public void LocalFunction_CanUseClosure()
+        {
+            var code = @"
+        func main() {
+            x = 10;
+            multiply = func(y) { return x * y; };
+            return multiply(3);
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(30, result.AsNumber());
+        }
+
+        [Fact]
+        public void LocalFunction_CanBeRecursive()
+        {
+            var code = @"
+        func main() {
+            fact = func(n) {
+                if (n <= 1) { return 1; }
+                return n * fact(n - 1);
+            };
+            return fact(5);
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(120, result.AsNumber());
+        }
+
+        [Fact]
+        public void LocalFunction_CanBeNested()
+        {
+            var code = @"
+        func main() {
+            outer = func() {
+                inner = func() { return 42; };
+                return inner();
+            };
+            return outer();
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(42, result.AsNumber());
+        }
+
+        [Fact]
+        public void LocalFunction_CanBePassedAsArgument()
+        {
+            var code = @"
+        func main() {
+            apply = func(fn, value) { return fn(value); };
+            square = func(x) { return x * x; };
+            return apply(square, 4);
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(16, result.AsNumber());
+        }
+
+        [Fact]
+        public void LocalFunction_ReferencesAreEqualWhenPointingToSameFunction()
+        {
+            var code = @"
+        func main() {
+            greet1 = func() { return ""Hello""; };
+            greet2 = greet1; # Assigning function reference
+            return greet1 == greet2; # Comparing references
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.True(result.AsBoolean()); // Should be true since both reference the same function
+        }
+
+        [Fact]
+        public void LocalFunction_ReferencesAreNotEqualWhenPointingToDifferentFunctions()
+        {
+            var code = @"
+        func main() {
+            greet1 = func() { return ""Hello""; };
+            greet2 = func() { return ""Hello""; }; # Different function
+            return greet1 == greet2; # Comparing references
+        }
+    ";
+            var interpreter = SetupInterpreterCustom(code);
+            var result = interpreter.Interpret();
+            Assert.False(result.AsBoolean()); // Should be false since they are different function references
+        }
     }
 }
