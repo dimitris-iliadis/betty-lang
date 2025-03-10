@@ -1,5 +1,4 @@
 ﻿using BettyLang.Core.AST;
-using System.Linq.Expressions;
 
 namespace BettyLang.Core.Interpreter
 {
