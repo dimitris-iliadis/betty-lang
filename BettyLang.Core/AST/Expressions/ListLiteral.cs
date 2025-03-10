@@ -2,7 +2,7 @@
 
 namespace BettyLang.Core.AST
 {
-    public class ListValue(List<Expression> elements) : Expression
+    public class ListLiteral(List<Expression> elements) : Expression
     {
         public List<Expression> Elements { get; } = elements;
 

@@ -141,7 +141,7 @@ namespace BettyLang.Core
             Consume(TokenType.RBracket); // Consume the closing bracket (end of the range)
 
             // Construct and return a FunctionCall AST node for the range function
-            return new FunctionCall("range", new List<Expression> { start, end });
+            return new FunctionCall(new List<Expression> { start, end }, functionName : "range");
         }
 
         private Expression ParseListOrRange()
@@ -168,7 +168,7 @@ namespace BettyLang.Core
             }
 
             Consume(TokenType.RBracket); // Consume the closing bracket
-            return new ListValue(elements);
+            return new ListLiteral(elements);
         }
 
         private IndexerExpression ParseIndexerExpression(Expression listExpr)
@@ -264,11 +264,28 @@ namespace BettyLang.Core
                     Consume(TokenType.Identifier);
                     break;
 
+                // Function expression
+                case TokenType.Func:
+                    expr = ParseFunctionExpression();
+                    break;
+
                 default:
                     throw new Exception($"Unexpected token: {token.Type}");
             }
 
             return expr;
+        }
+
+        private FunctionExpression ParseFunctionExpression()
+        {
+            Consume(TokenType.Func);
+            Consume(TokenType.LParen);
+            var parameters = ParseParameters();
+            Consume(TokenType.RParen);
+
+            var body = ParseCompoundStatement();
+
+            return new FunctionExpression(parameters, body);
         }
 
         private static Expression ParseLiteral(Token token)
@@ -488,13 +505,18 @@ namespace BettyLang.Core
             // Consume the closing parenthesis
             Consume(TokenType.RParen);
 
-            // Return a new function call node
-            return new FunctionCall((functionExpr as Variable)!.Name, arguments);
+            if (functionExpr is Variable identifier)
+            {
+                return new FunctionCall(arguments, functionName : identifier.Name);
+            }
+
+            // Inline anonymous function call
+            return new FunctionCall(arguments, functionExpr);
         }
 
         private FunctionDefinition ParseFunctionDefinition()
         {
-            // "function" token is already consumed
+            Consume(TokenType.Func);
             string functionName = (string)_currentToken.Value!;
             Consume(TokenType.Identifier); // Function name
 
@@ -578,7 +600,6 @@ namespace BettyLang.Core
             {
                 if (_currentToken.Type == TokenType.Func)
                 {
-                    Consume(TokenType.Func);
                     functions.Add(ParseFunctionDefinition());
                 }
                 else

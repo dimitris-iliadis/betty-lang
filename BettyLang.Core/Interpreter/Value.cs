@@ -1,4 +1,6 @@
-﻿namespace BettyLang.Core.Interpreter
+﻿using BettyLang.Core.AST;
+
+namespace BettyLang.Core.Interpreter
 {
     public enum ValueType
     {
@@ -7,6 +9,7 @@
         Boolean,
         Char,
         List,
+        Function,
         None
     }
 
@@ -41,6 +44,7 @@
         private readonly int _stringId;
         private readonly bool _boolean;
         private readonly ValueList? _list;
+        private readonly FunctionExpression? _function;
 
         private Value(ValueType type) : this()
         {
@@ -72,6 +76,11 @@
             _list = list;
         }
 
+        private Value(FunctionExpression function) : this(ValueType.Function)
+        {
+            _function = function;
+        }
+
         public static Value FromString(string str)
         {
             int stringId = StringTable.AddString(str);
@@ -82,6 +91,7 @@
         public static Value FromBoolean(bool boolean) => new Value(boolean);
         public static Value FromChar(char character) => new Value(character);
         public static Value FromList(List<Value> list) => new Value(new ValueList(list));
+        public static Value FromFunction(FunctionExpression function) => new Value(function);
         public static Value None() => new Value(ValueType.None);
 
         public readonly char AsChar()
@@ -127,6 +137,13 @@
             };
         }
 
+        public readonly FunctionExpression AsFunction()
+        {
+            if (Type != ValueType.Function)
+                throw new InvalidOperationException($"Expected a {ValueType.Function}, but got {Type}.");
+            return _function!;
+        }
+
         public static Value DeepCopy(Value value)
         {
             return value.Type switch
@@ -139,6 +156,9 @@
 
                 // For lists, recursively deep copy each element
                 ValueType.List => Value.FromList(DeepCopyList(value.AsList())),
+
+                // Functions can be returned as-is
+                ValueType.Function => Value.FromFunction(value.AsFunction()),
 
                 // None type can be returned as-is
                 ValueType.None => Value.None(),
@@ -171,7 +191,7 @@
                 ValueType.List => _list == null
                     ? "[]"
                     : $"[{string.Join(", ", _list.Items.Select(item => item.ToString()))}]",
-                ValueType.None => "None",
+                ValueType.Function => "<function>", 
                 _ => throw new InvalidOperationException($"Unknown type {Type}.")
             };
         }
@@ -190,6 +210,7 @@
                 ValueType.List => _list == null && other._list == null
                     || (_list != null && other._list != null &&
                         _list.Items.SequenceEqual(other._list.Items)),
+                ValueType.Function => _function == other._function,
                 ValueType.None => true,
                 _ => throw new InvalidOperationException($"Unknown type {Type}.")
             };
@@ -211,6 +232,7 @@
                     ValueType.Boolean => HashCode.Combine(Type, _boolean),
                     ValueType.Char => HashCode.Combine(Type, _char),
                     ValueType.List => HashCode.Combine(Type, _list),
+                    ValueType.Function => HashCode.Combine(Type, _function),
                     ValueType.None => Type.GetHashCode(),
                     _ => throw new InvalidOperationException($"Unknown type {Type}.")
                 };

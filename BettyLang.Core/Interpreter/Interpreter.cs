@@ -1,4 +1,5 @@
 ﻿using BettyLang.Core.AST;
+using System.Linq.Expressions;
 
 namespace BettyLang.Core.Interpreter
 {
@@ -31,13 +32,13 @@ namespace BettyLang.Core.Interpreter
                     throw new Exception("main() function cannot have parameters.");
 
                 // Execute the main function
-                return Visit(new FunctionCall("main", []));
+                return Visit(new FunctionCall([], functionName : "main"));
             }
             
             throw new Exception("No main function found.");
         }
 
-        public Value Visit(ListValue node)
+        public Value Visit(ListLiteral node)
         {
             var elements = node.Elements.Select(e => e.Accept(this)).ToList();
             return Value.FromList(elements);
@@ -437,6 +438,11 @@ namespace BettyLang.Core.Interpreter
                     // If we reach here, all elements are equal
                     return Value.FromBoolean(operatorType == TokenType.EqualEqual);
 
+                case (ValueType.Function, ValueType.Function) when operatorType == TokenType.EqualEqual || operatorType == TokenType.NotEqual:
+                    var leftFunction = leftResult.AsFunction();
+                    var rightFunction = rightResult.AsFunction();
+                    return Value.FromBoolean(leftFunction == rightFunction);
+
                 default:
                     throw new Exception("Type mismatch or unsupported types for comparison.");
             }
@@ -446,6 +452,7 @@ namespace BettyLang.Core.Interpreter
         public Value Visit(NumberLiteral node) => Value.FromNumber(node.Value);
         public Value Visit(StringLiteral node) => Value.FromString(node.Value);
         public Value Visit(CharLiteral node) => Value.FromChar(node.Value);
+        public Value Visit(FunctionExpression node) => Value.FromFunction(node);
 
         public void Visit(CompoundStatement node)
         {
@@ -572,24 +579,48 @@ namespace BettyLang.Core.Interpreter
         public void Visit(EmptyStatement node) { }
         public Value Visit(FunctionCall node)
         {
-            // If the function is an intrinsic function, invoke it
-            if (_intrinsicFunctions.TryGetValue(node.FunctionName, out var intrinsicFunction))
-                return intrinsicFunction.Invoke(node, this);
+            FunctionDefinition? function = null;
 
-            // Function is not an intrinsic function, look for a user-defined function
-            if (!_functions.TryGetValue(node.FunctionName, out var function))
-                throw new Exception($"Function {node.FunctionName} is not defined.");
+            // Resolve function reference
+            if (node.FunctionName is not null)
+            {
+                if (_intrinsicFunctions.TryGetValue(node.FunctionName, out var intrinsicFunction))
+                    return intrinsicFunction.Invoke(node, this);
 
-            // Enter a new scope for function execution
+                if (_functions.TryGetValue(node.FunctionName, out var globalFunction))
+                {
+                    function = globalFunction;
+                }
+                else
+                {
+                    var funcExpr = _scopeManager.LookupVariable(node.FunctionName).AsFunction();
+                    function = new FunctionDefinition(null, funcExpr.Parameters, funcExpr.Body); // Convert to FunctionDefinition
+                }
+            }
+            else if (node.Expression is FunctionExpression funcExpr)
+            {
+                function = new FunctionDefinition(null, funcExpr.Parameters, funcExpr.Body); // Convert inline function
+            }
+            else if (node.Expression is IndexerExpression indexExpr)
+            {
+                // Resolve function stored in a list
+                funcExpr = indexExpr.Accept(this).AsFunction();
+                function = new FunctionDefinition(null, funcExpr.Parameters, funcExpr.Body);
+            }
+
+            if (function is null)
+                throw new Exception($"Function not found: {node.FunctionName ?? "anonymous function"}");
+
+            // Enter function scope
             _scopeManager.EnterScope();
 
-            // Prepare for function execution by saving the current context
+            // Save execution context
             int previousLoopDepth = _context.LoopDepth;
-            _context.LoopDepth = 0; // Reset loop depth for the new function context
-            var previousFlowState = _context.FlowState; // Save the current flow state
-            _context.FlowState = ControlFlowState.Normal; // Reset flow state for function execution
+            _context.LoopDepth = 0;
+            var previousFlowState = _context.FlowState;
+            _context.FlowState = ControlFlowState.Normal;
 
-            // Set function parameters in the new scope
+            // Bind function arguments
             for (int i = 0; i < node.Arguments.Count; i++)
             {
                 var argValue = node.Arguments[i].Accept(this);
@@ -599,16 +630,14 @@ namespace BettyLang.Core.Interpreter
             // Execute function body
             function.Body.Accept(this);
 
-            // Capture the return value if the function execution resulted in a return
-            Value returnValue = 
-                _context.FlowState == ControlFlowState.Return 
-                ? _context.LastReturnValue : Value.None();
+            // Retrieve return value
+            Value returnValue = (_context.FlowState == ControlFlowState.Return)
+                ? _context.LastReturnValue
+                : Value.None();
 
-            // Restore the context after function execution
-            _context.LoopDepth = previousLoopDepth; // Restore the loop depth to its previous state
-            _context.FlowState = previousFlowState; // Restore the flow state to its previous state
-
-            // Exit the function scope
+            // Restore previous execution context and exit function scope
+            _context.LoopDepth = previousLoopDepth;
+            _context.FlowState = previousFlowState;
             _scopeManager.ExitScope();
 
             return returnValue;
@@ -616,10 +645,10 @@ namespace BettyLang.Core.Interpreter
 
         public void Visit(FunctionDefinition node)
         {
-            if (_intrinsicFunctions.ContainsKey(node.FunctionName))
+            if (_intrinsicFunctions.ContainsKey(node.FunctionName!))
                 throw new Exception($"Function name '{node.FunctionName}' is reserved for built-in functions.");
 
-            _functions[node.FunctionName] = node;
+            _functions[node.FunctionName!] = node;
         }
 
         public Value Visit(UnaryOperatorExpression node)
