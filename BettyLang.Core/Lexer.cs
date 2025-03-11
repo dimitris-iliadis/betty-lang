@@ -16,6 +16,7 @@
             ["true"] = TokenType.TrueKeyword,
             ["false"] = TokenType.FalseKeyword,
             ["if"] = TokenType.If,
+            ["then"] = TokenType.Then,
             ["elif"] = TokenType.Elif,
             ["else"] = TokenType.Else,
             ["for"] = TokenType.For,

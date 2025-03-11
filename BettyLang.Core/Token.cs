@@ -17,7 +17,7 @@
 
         // Keywords/identifiers
         Func, Global, TrueKeyword, FalseKeyword, Identifier,
-        If, Elif, Else, For, ForEach, In, While, Do, Break, Continue, Return,
+        If, Then, Elif, Else, For, ForEach, In, While, Do, Break, Continue, Return,
 
         // Assignment operators
         Equal, Increment, Decrement, PlusEqual, MinusEqual,
