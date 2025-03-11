@@ -18,7 +18,7 @@
                     return x;
                 }
                 """;
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
 
             var result = interpreter.Interpret();
 
@@ -36,7 +36,7 @@
                     return x;
                 }
                 """;
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
 
             var result = interpreter.Interpret();
 
@@ -59,7 +59,7 @@
                     x = 3;
                 }
                 """;
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
 
             var result = interpreter.Interpret();
 

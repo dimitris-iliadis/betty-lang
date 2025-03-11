@@ -152,7 +152,7 @@ namespace BettyLang.Tests.InterpreterTests
             }
             """;
 
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
 
             var result = interpreter.Interpret();
             Assert.Equal(4.0, result.AsNumber());
@@ -349,7 +349,7 @@ namespace BettyLang.Tests.InterpreterTests
                     return foo()[1];
                 }
                 """;
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
 
             var result = interpreter.Interpret();
             Assert.Equal('e', result.AsChar());
@@ -436,7 +436,7 @@ namespace BettyLang.Tests.InterpreterTests
                             return [len(x), len(y), x[3], y[3]];
                         }
                     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
 
             // Convert the result to a list to check its contents

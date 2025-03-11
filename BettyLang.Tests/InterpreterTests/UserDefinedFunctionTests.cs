@@ -9,7 +9,7 @@
                 func simple() { return 42; }
                 func main() { return simple(); }
             ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(42, result.AsNumber());
         }
@@ -21,7 +21,7 @@
                 func sum(a, b) { return a + b; }
                 func main() { return sum(5, 7); }
             ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(12, result.AsNumber());
         }
@@ -36,7 +36,7 @@
                 }
                 func main() { return fact(5); }
             ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(120, result.AsNumber());
         }
@@ -49,7 +49,7 @@
                 func outer(b) { return inner(b) + inner(b + 1); }
                 func main() { return outer(3); }
             ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(9 + 16, result.AsNumber()); // 3*3 + 4*4
         }
@@ -69,7 +69,7 @@
                 }
                 func main() { return sumToN(5); }
             ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(15, result.AsNumber()); // Sum of 1 to 5
         }
@@ -83,7 +83,7 @@
             return greet();
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal("Hello", result.AsString());
         }
@@ -97,7 +97,7 @@
             return add(2, 3);
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(5, result.AsNumber());
         }
@@ -112,7 +112,7 @@
             return multiply(3);
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(30, result.AsNumber());
         }
@@ -129,7 +129,7 @@
             return fact(5);
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(120, result.AsNumber());
         }
@@ -146,7 +146,7 @@
             return outer();
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(42, result.AsNumber());
         }
@@ -161,7 +161,7 @@
             return apply(square, 4);
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(16, result.AsNumber());
         }
@@ -176,7 +176,7 @@
             return greet1 == greet2; # Comparing references
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.True(result.AsBoolean()); // Should be true since both reference the same function
         }
@@ -191,7 +191,7 @@
             return greet1 == greet2; # Comparing references
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.False(result.AsBoolean()); // Should be false since they are different function references
         }
@@ -204,7 +204,7 @@
             return (func() { return 42; })(); # Directly calling a lambda
         }
     ";
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(42, result.AsNumber()); // Should return 42
         }
@@ -226,7 +226,7 @@
         }
     ";
 
-            var interpreter = SetupInterpreterCustom(code);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
 
             Assert.Equal(10, result.AsNumber());

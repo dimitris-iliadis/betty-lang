@@ -4,14 +4,12 @@ namespace BettyLang.Tests.TestUtilities
 {
     public class InterpreterTestBase
     {
-        protected static Interpreter SetupInterpreter(string code)
+        protected static Interpreter SetupInterpreter(string code, bool customSetup = false)
         {
-            return new Interpreter(new Parser(new Lexer($"func main() {{ {code} }}")));
-        }
-
-        protected static Interpreter SetupInterpreterCustom(string code)
-        {
-            return new Interpreter(new Parser(new Lexer(code)));
+            return new Interpreter(
+                new Parser(
+                    new Lexer(
+                        customSetup ? code : $"func main() {{ {code} }}")));
         }
     }
 }

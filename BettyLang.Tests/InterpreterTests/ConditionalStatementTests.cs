@@ -101,7 +101,7 @@
         [Fact]
         public void Function_WithForLoop_ReturnsCorrectValue()
         {
-            var customCode = @"
+            var code = @"
                 func myfunc() {
                     counter = 0;
                     for (i = 0; i < 5; i++) {
@@ -117,7 +117,7 @@
                     return result;
                 }
             ";
-            var interpreter = SetupInterpreterCustom(customCode);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(3.0, result.AsNumber());
         }
@@ -504,14 +504,14 @@
         [Fact]
         public void TernaryOperator_WithFunctionCalls()
         {
-            var customCode = @"
+            var code = @"
             func add(a, b) { return a + b; }
             func multiply(a, b) { return a * b; }
             func main() {
                 return (2 == 2) ? add(4, 5) : multiply(3, 3);
             }
         ";
-            var interpreter = SetupInterpreterCustom(customCode);
+            var interpreter = SetupInterpreter(code, true);
             var result = interpreter.Interpret();
             Assert.Equal(9.0, result.AsNumber());
         }
