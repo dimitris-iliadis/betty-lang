@@ -1,3 +1,3 @@
 # Betty
 
-Betty is a dynamic, educational programming language built with C#.
+Betty is a dynamic programming language built with C#.
