@@ -63,7 +63,6 @@ namespace BettyLang.Core
             };
         }
 
-
         private void Consume(TokenType tokenType)
         {
             if (_currentToken.Type == tokenType)
@@ -269,6 +268,11 @@ namespace BettyLang.Core
                     expr = ParseFunctionExpression();
                     break;
 
+                // If expression
+                case TokenType.If:
+                    expr = ParseIfExpression();
+                    break;
+
                 default:
                     throw new Exception($"Unexpected token: {token.Type}");
             }
@@ -323,6 +327,29 @@ namespace BettyLang.Core
             }
 
             return results;
+        }
+
+        private IfExpression ParseIfExpression()
+        {
+            Consume(TokenType.If);
+            var condition = ParseExpression();
+            Consume(TokenType.Then);
+            var thenExpression = ParseExpression();
+
+            var elseIfExpressions = new List<(Expression Condition, Expression Expression)>();
+            while (_currentToken.Type == TokenType.Elif)
+            {
+                Consume(TokenType.Elif);
+                var elseIfCondition = ParseExpression();
+                Consume(TokenType.Then);
+                var elseIfExpression = ParseExpression();
+                elseIfExpressions.Add((elseIfCondition, elseIfExpression));
+            }
+            
+            Consume(TokenType.Else);
+            var elseExpression = ParseExpression();
+
+            return new IfExpression(condition, thenExpression, elseIfExpressions, elseExpression);
         }
 
         private IfStatement ParseIfStatement()

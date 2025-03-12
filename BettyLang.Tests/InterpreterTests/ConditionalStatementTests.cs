@@ -546,5 +546,78 @@
             var result = interpreter.Interpret();
             Assert.Equal(5.0, result.AsNumber());
         }
+
+        [Fact]
+        public void IfExpression_ExecutesCorrectBranch()
+        {
+            var code = @"
+        x = if 1 == 1 then 2 else 6;
+        return x;
+    ";
+            var interpreter = SetupInterpreter(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(2.0, result.AsNumber());
+        }
+
+        [Fact]
+        public void ElifExpression_ExecutesCorrectBranch()
+        {
+            var code = @"
+        x = if 1 == 2 then 2 elif 2 == 2 then 5 else 6;
+        return x;
+    ";
+            var interpreter = SetupInterpreter(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(5.0, result.AsNumber());
+        }
+
+        [Fact]
+        public void ElseExpression_ExecutesCorrectBranch()
+        {
+            var code = @"
+        x = if 1 == 2 then 2 elif 2 == 3 then 5 else 6;
+        return x;
+    ";
+            var interpreter = SetupInterpreter(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(6.0, result.AsNumber());
+        }
+
+        [Fact]
+        public void NestedIfElifElse_ExecutesCorrectBranch()
+        {
+            var code = @"
+        x = if 1 == 2 then 2 elif 2 == 2 then if 3 == 3 then 8 else 7 else 6;
+        return x;
+    ";
+            var interpreter = SetupInterpreter(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(8.0, result.AsNumber());
+        }
+
+        [Fact]
+        public void MultipleElifConditions_ExecutesCorrectBranch()
+        {
+            var code = @"
+        x = if 1 == 2 then 2 elif 2 == 3 then 5 elif 4 == 4 then 7 else 6;
+        return x;
+    ";
+            var interpreter = SetupInterpreter(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(7.0, result.AsNumber());
+        }
+
+        [Fact]
+        public void NoConditionTrue_ExecutesElseBranch()
+        {
+            var code = @"
+        x = if 1 == 3 then 2 elif 2 == 5 then 5 else 9;
+        return x;
+    ";
+            var interpreter = SetupInterpreter(code);
+            var result = interpreter.Interpret();
+            Assert.Equal(9.0, result.AsNumber());
+        }
+
     }
 }

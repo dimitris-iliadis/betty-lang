@@ -18,5 +18,6 @@ namespace BettyLang.Core.AST
         Value Visit(IndexerExpression node);
         Value Visit(ListLiteral node);
         Value Visit(FunctionExpression node);
+        Value Visit(IfExpression node);
     }
 }

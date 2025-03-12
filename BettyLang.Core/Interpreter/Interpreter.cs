@@ -37,6 +37,28 @@ namespace BettyLang.Core.Interpreter
             throw new Exception("No main function found.");
         }
 
+        public Value Visit(IfExpression node)
+        {
+            var conditionResult = node.Condition.Accept(this).AsBoolean();
+
+            if (conditionResult)
+            {
+                return node.ThenExpression.Accept(this);
+            }
+            else
+            {
+                foreach (var (Condition, Expression) in node.ElseIfExpressions)
+                {
+                    if (Condition.Accept(this).AsBoolean())
+                    {
+                        return Expression.Accept(this);
+                    }
+                }
+                
+                return node.ElseExpression.Accept(this);
+            }
+        }
+
         public Value Visit(ListLiteral node)
         {
             var elements = node.Elements.Select(e => e.Accept(this)).ToList();
